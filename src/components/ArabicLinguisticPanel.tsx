@@ -14,7 +14,8 @@ import {
   Lightbulb,
   AlertTriangle,
   Search,
-  ExternalLink
+  ExternalLink,
+  Globe
 } from 'lucide-react';
 import { SubtitleItem, LoopConfig, SavedWord, SavedSentence } from '../types';
 import { 
@@ -27,6 +28,7 @@ import {
   exportToMarkdown, 
   exportToAnkiCsv, 
   exportToPrintableHtml, 
+  exportToHtmlFile,
   downloadFile 
 } from '../utils/arabicStudyExport';
 
@@ -109,11 +111,13 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
     setAiDiscovery(null);
     setAiError(null);
     setActiveTab('linguistics');
+    handleDiscoverWord(clean);
   };
 
   // Trigger Gemini Deep Discovery for the selected word
-  const handleDiscoverWord = async () => {
-    if (!selectedWord) return;
+  const handleDiscoverWord = async (wordToDiscover?: string) => {
+    const targetWord = wordToDiscover || selectedWord;
+    if (!targetWord) return;
     setIsDiscovering(true);
     setAiError(null);
     try {
@@ -121,10 +125,10 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          word: selectedWord,
+          word: targetWord,
           contextSentence: currentSubtitle?.text || '',
           targetLang: 'Arabic',
-          nativeLang: 'Malayalam'
+          nativeLang: targetTranslationLang === 'en' ? 'English' : 'Malayalam'
         })
       });
 
@@ -135,9 +139,9 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
           return;
         }
       }
-      setAiError('Gemini offline. Using local Arabic morphological dictionary.');
+      setAiError('Offline mode. Using local Arabic morphological dictionary.');
     } catch {
-      setAiError('Gemini offline. Local Arabic morphology active.');
+      setAiError('Offline mode. Local Arabic morphology active.');
     } finally {
       setIsDiscovering(false);
     }
@@ -173,6 +177,12 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
     const md = exportToMarkdown(savedSentences, savedWords, videoTitle);
     downloadFile(md, `Arabic-Study-Session-${Date.now()}.md`, 'text/markdown;charset=utf-8');
     setExportNotice('✓ Downloaded Markdown Study Notes!');
+    setTimeout(() => setExportNotice(null), 3000);
+  };
+
+  const handleExportHtml = () => {
+    exportToHtmlFile(savedSentences, savedWords, videoTitle);
+    setExportNotice('✓ Downloaded Interactive HTML Study Deck!');
     setTimeout(() => setExportNotice(null), 3000);
   };
 
@@ -535,13 +545,22 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                           {currentSubtitle.vocalizedText || currentSubtitle.text}
                         </div>
 
-                        {/* Full Sentence Translation in Selected Language */}
-                        <div className="mt-2 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80">
-                          <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block mb-0.5">
-                            {targetTranslationLang === 'en' ? 'Sentence Translation:' : 'വാക്യത്തിന്റെ പൂർണ്ണ അർത്ഥം:'}
+                        {/* Full Sentence Translation in Selected Language - Bulletproof Contrast */}
+                        <div 
+                          className="mt-2.5 p-3.5 rounded-xl border-2 shadow-xs transition-colors"
+                          style={{
+                            backgroundColor: isLight ? '#f8fafc' : '#0f172a',
+                            borderColor: isLight ? '#cbd5e1' : '#334155'
+                          }}
+                        >
+                          <span 
+                            className="text-[11px] uppercase font-black block mb-1 tracking-wider"
+                            style={{ color: isLight ? '#475569' : '#94a3b8' }}
+                          >
+                            {targetTranslationLang === 'en' ? 'SENTENCE TRANSLATION (ENGLISH):' : 'വാക്യത്തിന്റെ പൂർണ്ണ അർത്ഥം (MALAYALAM):'}
                           </span>
                           <p 
-                            className="text-xs sm:text-sm font-bold leading-relaxed"
+                            className="text-sm sm:text-base font-extrabold leading-relaxed"
                             style={{ color: isLight ? '#0f172a' : '#f8fafc' }}
                           >
                             {currentSubtitle.translation}
@@ -611,26 +630,40 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                       )}
 
                       {aiDiscovery.collocations?.length > 0 && (
-                        <div className="space-y-2">
-                          <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 block">
+                        <div className="space-y-2.5">
+                          <span 
+                            className="text-xs font-black block tracking-wide uppercase"
+                            style={{ color: isLight ? '#0f172a' : '#f8fafc' }}
+                          >
                             Authentic Arabic Collocations & Phrases:
                           </span>
                           {aiDiscovery.collocations.map((c: any, idx: number) => (
                             <div 
                               key={idx} 
-                              className={`p-3 rounded-xl border-2 text-xs shadow-2xs ${
-                                isLight ? 'bg-white border-slate-200' : 'bg-slate-800 border-slate-700'
-                              }`}
+                              className="p-3.5 rounded-xl border-2 text-xs shadow-xs transition-colors"
+                              style={{
+                                backgroundColor: isLight ? '#ffffff' : '#1e293b',
+                                borderColor: isLight ? '#e2e8f0' : '#334155'
+                              }}
                             >
-                              <span 
-                                className="font-bold font-arabic text-lg block text-right leading-loose" 
-                                style={{ color: isLight ? '#4338ca' : '#a5b4fc' }}
-                                dir="rtl"
-                              >
-                                {c.phrase}
-                              </span>
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <button
+                                  onClick={() => speakWord(c.phrase.split('(')[0].trim(), 'ar-SA')}
+                                  className="p-1 rounded text-slate-400 hover:text-amber-500 cursor-pointer"
+                                  title="Listen to phrase"
+                                >
+                                  <Volume2 className="w-3.5 h-3.5" />
+                                </button>
+                                <span 
+                                  className="font-black font-arabic text-xl sm:text-2xl text-right leading-loose" 
+                                  style={{ color: isLight ? '#4338ca' : '#a5b4fc' }}
+                                  dir="rtl"
+                                >
+                                  {c.phrase}
+                                </span>
+                              </div>
                               <p 
-                                className="text-xs italic mt-1 font-arabic text-right leading-relaxed" 
+                                className="text-xs font-semibold italic mt-1 font-arabic text-right leading-relaxed" 
                                 style={{ color: isLight ? '#334155' : '#cbd5e1' }}
                                 dir="rtl"
                               >
@@ -638,8 +671,11 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                               </p>
                               {c.meaning && (
                                 <p 
-                                  className="text-xs font-bold mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-700/80" 
-                                  style={{ color: isLight ? '#0f172a' : '#f8fafc' }}
+                                  className="text-xs font-bold mt-2 pt-2 border-t" 
+                                  style={{ 
+                                    borderColor: isLight ? '#f1f5f9' : '#334155',
+                                    color: isLight ? '#0f172a' : '#f8fafc' 
+                                  }}
                                 >
                                   {c.meaning}
                                 </p>
@@ -682,18 +718,26 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                 Export all bookmarked sentences and vocabulary from this session as Markdown notes, Anki flashcard CSV, or a printable study sheet.
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   onClick={handleExportMarkdown}
-                  className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-transform hover:scale-102 cursor-pointer"
+                  className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-transform hover:scale-102 cursor-pointer"
                 >
                   <FileText className="w-3.5 h-3.5 text-rose-400" />
                   <span>Markdown (.md)</span>
                 </button>
 
                 <button
+                  onClick={handleExportHtml}
+                  className="px-3 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-transform hover:scale-102 cursor-pointer"
+                >
+                  <Globe className="w-3.5 h-3.5 text-white" />
+                  <span>HTML (.html)</span>
+                </button>
+
+                <button
                   onClick={handleExportAnki}
-                  className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-transform hover:scale-102 cursor-pointer"
+                  className="px-3 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-transform hover:scale-102 cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                   <span>Anki Cards (.csv)</span>
@@ -701,7 +745,7 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
 
                 <button
                   onClick={handleExportPrintable}
-                  className="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-transform hover:scale-102 cursor-pointer"
+                  className="px-3 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-transform hover:scale-102 cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5 text-white" />
                   <span>Printable / PDF</span>

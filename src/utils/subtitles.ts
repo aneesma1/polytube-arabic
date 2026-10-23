@@ -277,6 +277,185 @@ export function generateWordDoc(
 }
 
 /**
+ * Generate Standalone HTML Study Guide (.html format)
+ * Responsive HTML file with Cairo and Amiri fonts, Web Speech audio, and interactive cards.
+ */
+export function generateHtmlStudyGuide(subtitles: SubtitleItem[], videoTitle: string): string {
+  const dateStr = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${videoTitle} - PolyTube Arabic Study Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&family=Noto+Sans+Malayalam:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #e11d48;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --accent: #4f46e5;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Cairo', 'Noto Sans Malayalam', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 30px 16px;
+      line-height: 1.6;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    .header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #fff;
+      padding: 24px 28px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      direction: ltr;
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .brand { font-size: 20px; font-weight: 900; color: #f43f5e; }
+    .meta { font-size: 12px; color: #94a3b8; }
+    h1 { font-size: 22px; font-weight: 800; color: #f8fafc; }
+    .badge {
+      display: inline-block;
+      margin-top: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 9999px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fca5a5;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      direction: ltr;
+    }
+    .time {
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #e11d48;
+      background: #ffe4e6;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .listen-btn {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+    }
+    .listen-btn:hover { background: #e2e8f0; color: #0f172a; }
+    .ar {
+      font-family: 'Amiri', serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.8;
+      text-align: right;
+    }
+    .tr {
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--accent);
+      direction: ltr;
+      text-align: left;
+      margin-top: 4px;
+    }
+    .meaning {
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      direction: ltr;
+      text-align: left;
+      margin-top: 4px;
+    }
+    .note {
+      font-size: 12px;
+      color: #059669;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-top: 8px;
+      direction: ltr;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-top">
+        <div class="brand">PolyTube <span style="font-family:'Amiri'; color:#fb7185;">العربية</span></div>
+        <div class="meta">📅 ${dateStr}</div>
+      </div>
+      <h1>${videoTitle}</h1>
+      <span class="badge">Total Subtitles: ${subtitles.length} • Audio Enabled (Click Listen)</span>
+    </div>
+
+    ${subtitles.map((item, idx) => {
+      const time = `${toSrtTimestamp(item.start).slice(3, 8)} - ${toSrtTimestamp(item.end).slice(3, 8)}`;
+      const target = item.vocalizedText || item.text;
+      return `
+      <div class="card">
+        <div class="card-top">
+          <span class="time">#${idx + 1} • [${time}]</span>
+          <button class="listen-btn" onclick="speak('${target.replace(/'/g, "\\'")}')">🔊 Listen</button>
+        </div>
+        <div class="ar">${target}</div>
+        ${item.transliteration ? `<div class="tr">/${item.transliteration}/</div>` : ''}
+        <div class="meaning">${item.translation}</div>
+        ${item.notes ? `<div class="note">💡 <b>Insight:</b> ${item.notes}</div>` : ''}
+      </div>`;
+    }).join('')}
+  </div>
+
+  <script>
+    function speak(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ar-SA';
+        u.rate = 0.9;
+        window.speechSynthesis.speak(u);
+      }
+    }
+  </script>
+</body>
+</html>`;
+}
+
+
+/**
  * Generate Anki Flashcards Deck (.tsv format)
  * Front: Target Sentence (with optional audio hint)
  * Back: Translation + Transliteration + Context

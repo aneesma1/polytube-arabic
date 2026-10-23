@@ -388,3 +388,381 @@ export function exportToPrintableHtml(
     printWindow.document.close();
   }
 }
+
+/**
+ * 4. Generate Standalone Interactive HTML Study Deck
+ * Self-contained file with embedded fonts and Web Speech API audio for offline study
+ */
+export function generateStudyHtml(
+  sentences: SavedSentence[],
+  words: SavedWord[],
+  videoTitle: string = 'Arabic Immersion Session'
+): string {
+  const dateStr = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PolyTube Arabic Study Guide - ${videoTitle}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;800;900&family=Noto+Sans+Malayalam:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #e11d48;
+      --primary-hover: #be123c;
+      --bg-body: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --accent: #4f46e5;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Cairo', 'Noto Sans Malayalam', system-ui, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-main);
+      padding: 30px 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .header-card {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #ffffff;
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      direction: ltr;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+    }
+    .brand {
+      font-size: 22px;
+      font-weight: 900;
+      color: #f43f5e;
+      letter-spacing: -0.5px;
+    }
+    .badge {
+      background: rgba(244, 63, 94, 0.2);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    .meta-info {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #f8fafc;
+      margin-bottom: 6px;
+    }
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .stat-pill {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+    .section-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #1e293b;
+      margin: 28px 0 14px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-right: 4px solid var(--primary);
+      padding-right: 12px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+      margin-bottom: 14px;
+      padding: 18px 20px;
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .sentence-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      direction: ltr;
+    }
+    .timestamp {
+      background: #ffe4e6;
+      color: #e11d48;
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .audio-btn {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .audio-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .ar-sentence {
+      font-family: 'Amiri', serif;
+      font-size: 26px;
+      font-weight: bold;
+      color: #0f172a;
+      line-height: 1.8;
+      margin-bottom: 6px;
+      text-align: right;
+    }
+    .phonetic {
+      font-family: monospace;
+      font-size: 13px;
+      color: var(--accent);
+      direction: ltr;
+      text-align: left;
+      margin-bottom: 6px;
+    }
+    .translation {
+      font-size: 15px;
+      font-weight: 700;
+      color: #334155;
+      direction: ltr;
+      text-align: left;
+    }
+    .note-box {
+      margin-top: 8px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #166534;
+      direction: ltr;
+      text-align: left;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 800;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--border);
+      text-align: right;
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: #fafafa; }
+    .word-ar {
+      font-family: 'Amiri', serif;
+      font-size: 22px;
+      font-weight: bold;
+      color: #0f172a;
+    }
+    .root-tag {
+      font-family: 'Amiri', serif;
+      font-weight: bold;
+      color: #b45309;
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 15px;
+      display: inline-block;
+    }
+    .pattern-tag {
+      font-family: 'Amiri', serif;
+      color: #047857;
+      background: #d1fae5;
+      border: 1px solid #a7f3d0;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 15px;
+      display: inline-block;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 36px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      direction: ltr;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-card">
+      <div class="header-top">
+        <div class="brand">PolyTube <span style="font-family:'Amiri'; color:#fb7185;">العربية</span></div>
+        <div class="badge">Standalone Offline Study Deck</div>
+        <div class="meta-info">📅 ${dateStr}</div>
+      </div>
+      <h1>${videoTitle}</h1>
+      <div class="stats-row">
+        <div class="stat-pill">📚 Saved Words: <b>${words.length}</b></div>
+        <div class="stat-pill">💬 Analyzed Sentences: <b>${sentences.length}</b></div>
+        <div class="stat-pill">🎧 Audio Enabled (Click Listen)</div>
+      </div>
+    </div>
+
+    ${words.length > 0 ? `
+    <h2 class="section-title">🔤 Vocabulary & Morphological Roots (المفردات والجذور)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>الكلمة (Word)</th>
+          <th>الجذر (Root)</th>
+          <th>الوزن (Pattern)</th>
+          <th>المعنى (Translation)</th>
+          <th>سياق الجملة (Context)</th>
+          <th style="direction:ltr; text-align:center;">Audio</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${words.map(w => {
+          const analysis = lookupArabicWord(w.word);
+          const root = w.root || analysis.root || '—';
+          const pattern = analysis.pattern || '—';
+          const vocalized = w.vocalized || w.word;
+          const meaning = w.translation || analysis.translation || '';
+          const context = w.contextSentence || '';
+          return `
+          <tr>
+            <td>
+              <div class="word-ar">${vocalized}</div>
+              <small style="color:#64748b; font-family:monospace; direction:ltr; display:block;">/${w.transliteration || transliterateArabic(w.word)}/</small>
+            </td>
+            <td><span class="root-tag">${root}</span></td>
+            <td><span class="pattern-tag">${pattern}</span></td>
+            <td><b>${meaning}</b></td>
+            <td><small style="color:#475569; font-family:'Amiri'; font-size:15px;">${context}</small></td>
+            <td style="direction:ltr; text-align:center;">
+              <button class="audio-btn" onclick="speak('${vocalized.replace(/'/g, "\\'")}')">
+                🔊 Listen
+              </button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    ` : ''}
+
+    ${sentences.length > 0 ? `
+    <h2 class="section-title">💬 Analyzed Dialogue & Sentences (الجمل المحفوظة)</h2>
+    ${sentences.map((s, idx) => {
+      const time = formatTime(s.start);
+      const vocalized = s.vocalizedText || s.text;
+      const translit = s.transliteration || transliterateArabic(s.text);
+      return `
+      <div class="card">
+        <div class="sentence-header">
+          <span class="timestamp">#${idx + 1} • [${time}]</span>
+          <button class="audio-btn" onclick="speak('${vocalized.replace(/'/g, "\\'")}')">
+            🔊 Pronounce Sentence
+          </button>
+        </div>
+        <div class="ar-sentence">${vocalized}</div>
+        <div class="phonetic">/${translit}/</div>
+        <div class="translation">${s.translation}</div>
+        ${s.notes ? `<div class="note-box">💡 <b>Insight:</b> ${s.notes}</div>` : ''}
+      </div>`;
+    }).join('')}
+    ` : ''}
+
+    <div class="footer">
+      Generated seamlessly with <b>PolyTube Arabic Immersion Studio</b> • 100% Client-Side & Offline Ready
+    </div>
+  </div>
+
+  <script>
+    function speak(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ar-SA';
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        alert('Web Speech API is not supported in this browser.');
+      }
+    }
+  </script>
+</body>
+</html>`;
+}
+
+/**
+ * 5. Export to Downloadable HTML File (.html)
+ */
+export function exportToHtmlFile(
+  sentences: SavedSentence[],
+  words: SavedWord[],
+  videoTitle: string = 'Arabic Immersion Session'
+) {
+  const html = generateStudyHtml(sentences, words, videoTitle);
+  const filename = `Arabic-Study-Session-${Date.now()}.html`;
+  downloadFile(html, filename, 'text/html;charset=utf-8');
+}
+

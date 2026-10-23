@@ -476,7 +476,56 @@ async function handleOfflineMockRequest(url: string, init?: RequestInit): Promis
     let collocations: any[] = [];
     let commonCalqueTrap = `In Arabic, words like "${cleanW}" carry morphological case endings and specific verbal collocations rather than literal word-for-word translation.`;
 
-    if (cleanW.includes('استعرض') || cleanW.includes('يستعرض') || cleanW.includes('عرض')) {
+    if (cleanW.includes('خلال') || cleanW.includes('خلل')) {
+      collocations = [
+        { phrase: 'خِلاَلَ سَاعَاتٍ مَعْدُودَة (Within a few hours)', example: 'تَتِمُّ العَمَلِيَّةُ خِلاَلَ سَاعَاتٍ مَعْدُودَةٍ فَقَطْ', meaning: 'Within a few short hours — highlights rapid, disciplined execution' },
+        { phrase: 'مِنْ خِلاَلِ التَّنْسِيقِ (Through / By means of)', example: 'تَحَقَّقَ الإِنْجَازُ مِنْ خِلاَلِ التَّخْطِيطِ الدَّقِيقِ', meaning: 'Through rigorous coordination and strategic planning' },
+        { phrase: 'خِلاَلَ الفَتْرَةِ القَادِمَةِ (During the coming period)', example: 'سَتَبْدَأُ الخُطَّةُ خِلاَلَ الأَيَّامِ القَادِمَةِ', meaning: 'During the upcoming days/period (standard temporal marker)' }
+      ];
+      commonCalqueTrap = `«خِلاَلَ» (Khilāl) means "within the span of" or "during". Learners translating literally from English or Malayalam often mistakenly reach for "فِي" (in) or "دَاخِل" (which strictly refers to physical internal space like inside a room). In authentic Arabic, time limits and spans are strictly expressed with «خِلاَلَ» (e.g. خِلاَلَ ١٢ سَاعَة = within the span of 12 hours).`;
+    } else if (cleanW.includes('صفر') || cleanW.includes('صفرية')) {
+      collocations = [
+        { phrase: 'مِنْطَقَةٌ صِفْرِيَّة (Zero-population zone)', example: 'تُعْتَبَرُ عَرَفَات مِنْطَقَةً صِفْرِيَّةً طَوَالَ العَامِ', meaning: 'Completely uninhabited territory throughout the year' },
+        { phrase: 'يَرْجِعُ إِلَى الصِّفْرِ (Drops back to zero)', example: 'يَرْجِعُ عَدَدُ السُّكَّانِ إِلَى الصِّفْرِ خِلاَلَ سَاعَاتٍ', meaning: 'Resets or drops back to zero immediately' },
+        { phrase: 'نُقْطَةُ الصِّفْرِ (Ground zero / Starting baseline)', example: 'انْطَلَقَتِ الخُطَّةُ التَّشْغِيلِيَّةُ مِنْ نُقْطَةِ الصِّفْرِ', meaning: 'Baseline or operational starting point' }
+      ];
+      commonCalqueTrap = `«صِفْر» means zero (historical origin of the English word 'cipher'). In demographics, "مِنْطَقَةٌ صِفْرِيَّة" means an unpopulated / uninhabited zone. Learners often think "صفر" only applies to arithmetic, but in media it idiomatically describes complete reset or total absence.`;
+    } else if (cleanW.includes('نسمة') || cleanW.includes('نسم')) {
+      collocations = [
+        { phrase: 'مِلْيُونُ نَسَمَة (One million souls / residents)', example: 'تَسْتَقْبِلُ المَشَاعِرُ أَكْثَرَ مِنْ مِلْيُونَيْ نَسَمَة', meaning: 'Accommodates over two million people/residents' },
+        { phrase: 'كِثَافَةُ النَّسَمَات (Population density per km²)', example: 'أَعْلَى كِثَافَةٍ سُكَّانِيَّةٍ فِي العَالَمِ لِعَدَدِ النَّسَمَات', meaning: 'Highest demographic density in the world' },
+        { phrase: 'آلاَفُ النَّسَمَات (Thousands of souls)', example: 'يَتَوَافَدُ آلاَفُ النَّسَمَاتِ يَوْمِيّاً عَلَى المَشَاعِرِ', meaning: 'Thousands of persons streaming in daily' }
+      ];
+      commonCalqueTrap = `In Arabic census and demographic reports, populations are counted in «نَسَمَة» (nasamah - literally 'breaths' or 'souls'), NOT "شخص" (shakhs) or "إنسان" (insān). Native media always says "مِلْيُون نَسَمَة", never "مليون شخص".`;
+    } else if (cleanW.includes('ساعة') || cleanW.includes('ساع')) {
+      collocations = [
+        { phrase: 'عَلَى مَدَارِ السَّاعَة (Around the clock / 24/7)', example: 'تَعْمَلُ الطَّوَاقِمُ الطِّبِّيَّةُ عَلَى مَدَارِ السَّاعَةِ', meaning: 'Continuous 24-hour non-stop operation' },
+        { phrase: 'فِي أَقَلَّ مِنْ سَاعَة (In less than an hour)', example: 'تَمَّ إِخْلاَءُ المَوْقِعِ فِي أَقَلَّ مِنْ سَاعَة', meaning: 'Rapid clearance in under an hour' },
+        { phrase: 'سَاعَةُ الذِّرْوَة (Peak rush hour)', example: 'إِدَارَةُ المُرُورِ فِي سَاعَةِ الذِّرْوَةِ الحَرِجَةِ', meaning: 'Peak traffic and crowd movement window' }
+      ];
+      commonCalqueTrap = `In Arabic, "ساعة" can mean both a clock/watch and a unit of time (hour). When combined with "مدار" as in "على مدار الساعة", it idiomatically means 24/7 non-stop without sleep or interruption.`;
+    } else if (cleanW.includes('فقط')) {
+      collocations = [
+        { phrase: 'لَيْسَ فَقَطْ بَلْ... (Not only... but also...)', example: 'لَيْسَ فَقَطْ فِي الحَجِّ بَلْ فِي كُلِّ المَنَاسِكِ', meaning: 'Not merely limited to X, but extending to Y' },
+        { phrase: 'فَقَطْ لاَ غَيْر (Exclusively and nothing else)', example: 'المَطْلُوبُ هُوَ التَّنْظِيمُ فَقَطْ لاَ غَيْر', meaning: 'Solely that and nothing else' },
+        { phrase: 'خِلاَلَ يَوْمٍ وَاحِدٍ فَقَطْ (Within just one single day)', example: 'تَحَقَّقَ الهَدَفُ خِلاَلَ يَوْمٍ وَاحِدٍ فَقَطْ', meaning: 'Emphasizes extreme brevity of time' }
+      ];
+      commonCalqueTrap = `«فَقَطْ» is a restrictive particle (حرف قصر). Unlike English "only" which can precede nouns ("only 12 hours"), Arabic «فَقَطْ» is strictly placed AT THE END of the clause: "خِلاَلَ ١٢ سَاعَة فَقَطْ" (within 12 hours only). Placing it before the noun is an unnatural translation calque.`;
+    } else if (cleanW.includes('قفز') || cleanW.includes('قفزت')) {
+      collocations = [
+        { phrase: 'قَفَزَتِ الأَعْدَادُ (Numbers surged dramatically)', example: 'قَفَزَتْ أَعْدَادُ الحُجَّاجِ قَفْزَةً تَارِيخِيَّةً كَبِيرَةً', meaning: 'Numbers surged dramatically to historic highs' },
+        { phrase: 'قَفْزَةٌ نَوْعِيَّة (Qualitative transformative leap)', example: 'شَهِدَتِ الخِدْمَاتُ قَفْزَةً نَوْعِيَّةً فِي التَّطْوِيرِ', meaning: 'A remarkable transformative technological breakthrough' },
+        { phrase: 'قَفَزَ إِلَى الصَّدَارَةِ (Leaped to the forefront)', example: 'قَفَزَ المَشْرُوعُ إِلَى صَدَارَةِ الأَوْلَوِيَّاتِ', meaning: 'Jumped to the top priority rank' }
+      ];
+      commonCalqueTrap = `Literally meaning "jumped", «قَفَزَ» is used idiomatically in media and formal Arabic for sudden massive surges in statistical numbers, revenue, or demographic counts.`;
+    } else if (cleanW.includes('ثابت') || cleanW.includes('ثابتة')) {
+      collocations = [
+        { phrase: 'مِسَاحَةٌ ثَابِتَة (Fixed unchanging footprint)', example: 'مِسَاحَةُ مَشْعَرِ مِنَى ثَابِتَةٌ شَرْعِيّاً لاَ تَتَغَيَّرُ', meaning: 'Fixed geographic footprint bounded by Islamic law' },
+        { phrase: 'قَوَاعِدُ ثَابِتَة (Firm immutable principles)', example: 'الِالْتِزَامُ بِالقَوَاعِدِ الثَّابِتَةِ لِلسَّلاَمَةِ المُرُورِيَّةِ', meaning: 'Strict adherence to permanent safety rules' },
+        { phrase: 'نُقْطَةٌ ثَابِتَة (Stationary fixed point)', example: 'تَمَّ تَعْيِينُ نُقْطَةٍ ثَابِتَةٍ لِلْمُرَاقَبَةِ', meaning: 'Designated stationary checkpoint' }
+      ];
+      commonCalqueTrap = `«ثَابِتَة» is an active participle (اسم فاعل) expressing permanence. In the video context, it explains the central engineering paradox: the land area cannot expand because its religious boundaries are fixed, yet pilgrims keep increasing.`;
+    } else if (cleanW.includes('استعرض') || cleanW.includes('يستعرض') || cleanW.includes('عرض')) {
       collocations = [
         { phrase: 'يَسْتَعْرِضُ المَوْضُوعَ (Yasta‘ridu al-mawdū‘)', example: 'يَسْتَعْرِضُ الإِعْلاَمِيُّ المَوْضُوعَ بِالتَّفْصِيلِ', meaning: 'Presents and explores the subject in depth' },
         { phrase: 'يَسْتَعْرِضُ الخُطَّةَ (Yasta‘ridu al-khuttah)', example: 'يَسْتَعْرِضُ المَسْؤُولُونَ خُطَّةَ الطَّوَارِئِ', meaning: 'Reviews and examines the operational plan' },
@@ -536,9 +585,18 @@ async function handleOfflineMockRequest(url: string, init?: RequestInit): Promis
 
     if (!collocations.length) {
       collocations = [
-        { phrase: `اسْتِعْمَالُ «${cleanW}» فِي السِّيَاق (Usage)`, example: `تَرِدُ الكَلِمَةُ ضِمْنَ التَّرَاكِيبِ اللُّغَوِيَّةِ الأَصِيلَةِ فِي الإِعْلاَمِ`, meaning: 'Authentic contextual occurrence in modern Arabic media' },
-        { phrase: `المَعْنَى الدَّلاَلِيّ (Semantic Focus)`, example: `تُعَبِّرُ عَنِ المَفْهُومِ الدَّقِيقِ دُونَ حَاجَةٍ لِلتَّرْجَمَةِ الحَرْفِيَّةِ`, meaning: 'Expresses accurate contextual nuance without literal translation' }
+        { 
+          phrase: `اسْتِعْمَالُ «${cleanW}» فِي اللُّغَة (Collocation)`, 
+          example: `تَرِدُ كَلِمَةُ «${cleanW}» لِلدَّلاَلَةِ عَلَى المَعْنَى المَقْصُودِ بِدِقَّة`, 
+          meaning: `${analysis.translation || 'Key authentic term'} — used in formal media and spoken dialogue without literal translation.` 
+        },
+        { 
+          phrase: `السِّيَاقُ التَّعْبِيرِيّ (Natural Phrasing)`, 
+          example: `تُسْتَخْدَمُ فِي التَّعْبِيرِ عَنِ الفِكْرَةِ بِأُسْلُوبٍ عَرَبِيٍّ أَصِيل`, 
+          meaning: `Natural phrasing: Expresses the core meaning (${analysis.translationMl || analysis.translation || 'concept'}) smoothly.` 
+        }
       ];
+      commonCalqueTrap = `«${cleanW}» carries specific morphological patterns (الوزن: ${analysis.pattern || 'قياسي'}) and contextual collocations. Pay attention to its prepositions and case endings rather than translating word-for-word.`;
     }
 
     return createJsonResponse({

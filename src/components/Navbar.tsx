@@ -109,12 +109,24 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Play className="w-4 h-4 text-white fill-white ml-0.5" />
           </div>
           <div className="flex flex-col">
-            <span className={`font-black text-sm tracking-tight leading-none ${
-              isLight ? 'text-slate-900' : 'bg-gradient-to-r from-amber-200 via-rose-200 to-indigo-200 bg-clip-text text-transparent'
-            }`}>
-              PolyTube <span className="text-rose-500 font-arabic">العربية</span>
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className={`font-black text-sm tracking-tight leading-none ${
+                isLight ? 'text-slate-900' : 'bg-gradient-to-r from-amber-200 via-rose-200 to-indigo-200 bg-clip-text text-transparent'
+              }`}>
+                PolyTube <span className="text-rose-500 font-arabic">العربية</span>
+              </span>
+              <span 
+                className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border leading-none shrink-0 ${
+                  isLight 
+                    ? 'bg-rose-50 text-rose-700 border-rose-200' 
+                    : 'bg-rose-950/70 text-rose-300 border-rose-800'
+                }`}
+                title="Application Version and Build Date/Time"
+              >
+                v1.4.0 • Built: Oct 23, 2026, 06:40 PM
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline mt-0.5">
               Arabic Immersion Player
             </span>
           </div>

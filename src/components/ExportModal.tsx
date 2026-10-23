@@ -9,7 +9,8 @@ import {
   Printer, 
   Check, 
   Sparkles,
-  Layers
+  Layers,
+  Globe
 } from 'lucide-react';
 import { SubtitleItem } from '../types';
 import { 
@@ -19,6 +20,7 @@ import {
   generateLineByLineMarkdown, 
   generateSideBySideMarkdown,
   generateWordDoc,
+  generateHtmlStudyGuide,
   generateAnkiDeck, 
   downloadFile 
 } from '../utils/subtitles';
@@ -98,6 +100,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         content = generateAnkiDeck(subtitles, videoTitle);
         filename = cleanFilename('anki_deck.tsv');
         mime = 'text/tab-separated-values;charset=utf-8';
+        break;
+      case 'html-guide':
+        content = generateHtmlStudyGuide(subtitles, videoTitle);
+        filename = cleanFilename('study_guide.html');
+        mime = 'text/html;charset=utf-8';
         break;
       case 'print':
         window.print();
@@ -327,6 +334,26 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print Study Worksheet (PDF)</span>
+            </button>
+          </div>
+
+          {/* 7. Interactive Standalone HTML */}
+          <div className="bg-slate-850 p-4 rounded-xl border border-slate-800 flex flex-col justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <Globe className="w-4 h-4 text-rose-400" />
+                <h3 className="font-semibold text-sm text-slate-200">Interactive Web Guide (.HTML)</h3>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Complete HTML study deck with clickable audio pronunciation. Works offline in any browser.
+              </p>
+            </div>
+            <button
+              onClick={() => handleExport('html-guide')}
+              className="w-full py-2 rounded-lg bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 border border-rose-500/40 text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download HTML Study Guide (.html)</span>
             </button>
           </div>
         </div>
