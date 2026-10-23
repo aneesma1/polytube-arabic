@@ -28,6 +28,8 @@ import { ExportModal } from './components/ExportModal';
 import { WordLookupModal } from './components/WordLookupModal';
 import { SettingsModal } from './components/SettingsModal';
 import { FloatingPlayController } from './components/FloatingPlayController';
+import { PwaUpdateToast } from './components/PwaUpdateToast';
+import { initPwaAutoUpdate } from './utils/pwaUpdate';
 import { CheckCircle2, Bookmark, Repeat } from 'lucide-react';
 
 const LOCAL_STORAGE_VOCAB_KEY = 'polytube_arabic_vocabulary_v1';
@@ -203,6 +205,32 @@ export default function App() {
     context: SubtitleItem;
   } | null>(null);
   const [shareToast, setShareToast] = useState<string | null>(null);
+
+  // PWA Auto-Update Notification State
+  const [updateToast, setUpdateToast] = useState<{
+    isOpen: boolean;
+    onApply: () => void;
+    onDefer: () => void;
+  }>({
+    isOpen: false,
+    onApply: () => {},
+    onDefer: () => {},
+  });
+
+  useEffect(() => {
+    initPwaAutoUpdate({
+      onUpdateAvailable: (applyFn, deferFn) => {
+        setUpdateToast({
+          isOpen: true,
+          onApply: applyFn,
+          onDefer: () => {
+            deferFn();
+            setUpdateToast(prev => ({ ...prev, isOpen: false }));
+          },
+        });
+      },
+    });
+  }, []);
 
   // Desktop check
   const [isDesktop, setIsDesktop] = useState(
@@ -628,6 +656,14 @@ export default function App() {
           theme={theme}
         />
       )}
+
+      {/* PWA Auto-Update Toast */}
+      <PwaUpdateToast
+        isOpen={updateToast.isOpen}
+        onApply={updateToast.onApply}
+        onDefer={updateToast.onDefer}
+        theme={theme}
+      />
     </div>
   );
 }

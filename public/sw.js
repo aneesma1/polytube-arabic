@@ -1,5 +1,5 @@
-// PolyTube Arabic Service Worker (PWA)
-const CACHE_NAME = 'polytube-arabic-v1';
+// PolyTube Arabic Service Worker with Auto-Update Mechanism
+const CACHE_NAME = 'polytube-arabic-v1.1.0';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -7,16 +7,18 @@ const PRECACHE_URLS = [
   './icon.svg'
 ];
 
+// Install: Cache essential assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_URLS).catch((err) => {
         console.warn('Pre-cache partial failure:', err);
       });
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
+// Activate: Clean up all previous cache versions and take control immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -27,19 +29,49 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Listen for SKIP_WAITING signal from client (manual or auto-update on launch)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Fetch Strategy:
+// 1. Navigation requests (index.html): Network-first with cache fallback
+// 2. Static assets: Cache-first with network fallback
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Let YouTube iframe API, videos, and external dynamic API calls bypass cache
+  // Let YouTube, Google APIs, and non-GET requests pass through
   if (
     url.origin.includes('youtube.com') ||
     url.origin.includes('googlevideo.com') ||
     url.origin.includes('ytimg.com') ||
+    url.origin.includes('googleapis.com') ||
     event.request.method !== 'GET'
   ) {
     return;
   }
 
+  // Navigation requests (HTML pages) -> Network first, fallback to cached index.html
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match('./index.html') || caches.match('./');
+        })
+    );
+    return;
+  }
+
+  // Static assets (CSS, JS, Fonts, Images) -> Cache first, fallback to network
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
@@ -52,10 +84,6 @@ self.addEventListener('fetch', (event) => {
           cache.put(event.request, toCache);
         });
         return response;
-      }).catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html') || caches.match('./');
-        }
       });
     })
   );
