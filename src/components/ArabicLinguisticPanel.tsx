@@ -207,7 +207,7 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
             }`}
           >
             <BookOpen className="w-3.5 h-3.5 text-rose-500" />
-            <span>التفريغ (Transcript)</span>
+            <span>Transcript</span>
             <span className="text-[10px] opacity-75 font-mono">({subtitles.length})</span>
           </button>
 
@@ -224,9 +224,9 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-            <span>الجذور والاشتقاق (Morphology)</span>
+            <span>Word Anatomy</span>
             {selectedWord && (
-              <span className="px-1.5 py-0.2 rounded bg-indigo-500/15 text-[10px] font-arabic font-bold">
+              <span className="px-1.5 py-0.2 rounded bg-indigo-500/15 text-[10px] font-arabic font-bold text-indigo-700 dark:text-indigo-300">
                 {selectedWord}
               </span>
             )}
@@ -245,7 +245,7 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
             }`}
           >
             <Bookmark className="w-3.5 h-3.5 text-amber-500" />
-            <span>دفتر الحفظ والتصدير</span>
+            <span>Study Deck</span>
             {(savedSentences.length > 0 || savedWords.length > 0) && (
               <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[10px] font-bold">
                 {savedSentences.length + savedWords.length}
@@ -258,14 +258,14 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
         <div className="flex items-center gap-1">
           <button
             onClick={() => setShowTashkeel(!showTashkeel)}
-            className={`px-2 py-1 text-[11px] font-bold rounded-lg border transition-colors cursor-pointer ${
+            className={`px-2.5 py-1 text-[11px] font-bold rounded-lg border transition-colors cursor-pointer ${
               showTashkeel
-                ? isLight ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-rose-950/40 text-rose-300 border-rose-800'
-                : isLight ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-slate-800 text-slate-400 border-slate-700'
+                ? isLight ? 'bg-rose-50 text-rose-700 border-rose-300' : 'bg-rose-950/50 text-rose-300 border-rose-800'
+                : isLight ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-slate-800 text-slate-400 border-slate-700'
             }`}
-            title="Toggle Arabic Tashkeel / Harakat"
+            title="Toggle Arabic Tashkeel / Harakat vowels"
           >
-            {showTashkeel ? 'التشكيل ✓' : 'بدون تشكيل'}
+            {showTashkeel ? 'Vowels ON ✓' : 'Vowels OFF'}
           </button>
         </div>
       </div>
@@ -321,7 +321,7 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                       <button
                         onClick={() => speakWord(sub.text, 'ar-SA')}
                         className="p-1 rounded text-slate-400 hover:text-amber-500 transition-colors cursor-pointer"
-                        title="استمع للنطق (Listen)"
+                        title="Listen to pronunciation"
                       >
                         <Volume2 className="w-3.5 h-3.5" />
                       </button>
@@ -340,7 +340,7 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                             ? 'text-amber-500 animate-spin'
                             : 'text-slate-400 hover:text-rose-500'
                         }`}
-                        title="تكرار الجملة (Loop 3x)"
+                        title="Loop sentence (3x)"
                       >
                         <Repeat className="w-3.5 h-3.5" />
                       </button>
@@ -351,7 +351,7 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                         className={`p-1 rounded transition-colors cursor-pointer ${
                           isPinned ? 'text-amber-500 fill-amber-500' : 'text-slate-400 hover:text-amber-500'
                         }`}
-                        title={isPinned ? 'محفوظة في الدفتر' : 'حفظ الجملة'}
+                        title={isPinned ? 'Saved to Bookmarks' : 'Bookmark sentence'}
                       >
                         <Bookmark className="w-3.5 h-3.5" />
                       </button>
@@ -379,7 +379,7 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                               ? 'hover:bg-indigo-50 hover:text-indigo-600'
                               : 'hover:bg-indigo-950/60 hover:text-indigo-300'
                           }`}
-                          title={`انقر لدراسة جذر: "${clean}"`}
+                          title={`Inspect root & anatomy: "${clean}"`}
                         >
                           {w}
                         </span>
@@ -407,68 +407,101 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
         )}
 
         {/* TAB 2: LINGUISTIC DEEP STUDY (ROOTS & MORPHOLOGY) */}
+        {/* TAB 2: LINGUISTIC DEEP STUDY (ROOTS & MORPHOLOGY) */}
         {activeTab === 'linguistics' && (
           <div className="space-y-4">
             {selectedWord ? (
               <>
                 {/* Word Inspector Card */}
-                <div className={`p-4 rounded-2xl border ${
-                  isLight ? 'bg-gradient-to-br from-indigo-50/50 to-white border-indigo-200' : 'bg-slate-850 border-slate-750'
+                <div className={`p-4 rounded-2xl border shadow-xs ${
+                  isLight ? 'bg-gradient-to-br from-indigo-50/40 via-white to-slate-50 border-indigo-200' : 'bg-slate-850 border-slate-750'
                 }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
-                      تشريح الكلمة العربية (Arabic Word Anatomy)
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">
+                      Arabic Word Anatomy
                     </span>
                     <button
                       onClick={() => speakWord(selectedWord, 'ar-SA')}
                       className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-amber-500 hover:scale-110 transition-transform cursor-pointer"
-                      title="استمع للنطق"
+                      title="Listen to pronunciation"
                     >
                       <Volume2 className="w-4 h-4" />
                     </button>
                   </div>
 
                   <div className="text-center my-3">
-                    <h2 className="text-3xl sm:text-4xl font-black font-arabic text-slate-900 dark:text-white" dir="rtl">
+                    <h2 
+                      className="text-3xl sm:text-4xl font-black font-arabic tracking-wide" 
+                      style={{ color: isLight ? '#0f172a' : '#ffffff' }}
+                      dir="rtl"
+                    >
                       {selectedWord}
                     </h2>
-                    <span className="text-xs font-mono text-indigo-600 dark:text-indigo-300 mt-1 block">
+                    <span className="text-xs font-mono text-indigo-600 dark:text-indigo-300 mt-1 block font-semibold">
                       /{currentAnalysis?.transliteration || transliterateArabic(selectedWord)}/
                     </span>
                   </div>
 
                   {/* Root and Pattern Metric Cards */}
                   <div className="grid grid-cols-2 gap-2 mt-4">
-                    <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-center">
-                      <span className="text-[10px] uppercase font-bold text-amber-800 dark:text-amber-400 block mb-1">
-                        الجِذْر الثلاثي (Root)
+                    <div className="p-3 rounded-xl bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/30 dark:border-amber-800 text-center">
+                      <span className="text-[10px] uppercase font-bold text-amber-800 dark:text-amber-300 block mb-1">
+                        TRILATERAL ROOT (الجذر)
                       </span>
-                      <span className="text-2xl font-black font-arabic text-amber-900 dark:text-amber-200">
-                        {currentAnalysis?.root || 'ن-ط-ق'}
+                      <span className="text-2xl font-black font-arabic text-amber-900 dark:text-amber-100">
+                        {currentAnalysis?.root || '—'}
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-center">
-                      <span className="text-[10px] uppercase font-bold text-emerald-800 dark:text-emerald-400 block mb-1">
-                        الوَزْن / الصيغة (Pattern)
+                    <div className="p-3 rounded-xl bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/30 dark:border-emerald-800 text-center">
+                      <span className="text-[10px] uppercase font-bold text-emerald-800 dark:text-emerald-300 block mb-1">
+                        MEASURE / PATTERN (الوزن)
                       </span>
-                      <span className="text-2xl font-black font-arabic text-emerald-900 dark:text-emerald-200">
-                        {currentAnalysis?.pattern || 'مَفْعَلَة'}
+                      <span className="text-2xl font-black font-arabic text-emerald-900 dark:text-emerald-100">
+                        {currentAnalysis?.pattern || '—'}
                       </span>
                     </div>
                   </div>
 
-                  {/* Meaning & Part of Speech */}
-                  <div className="mt-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                      المعنى والسياق (Meaning)
-                    </span>
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">
-                      {aiDiscovery?.translation || currentAnalysis?.translation}
-                    </p>
-                    <span className="inline-block mt-1 text-[11px] font-semibold text-rose-500">
-                      {currentAnalysis?.partOfSpeech}
-                    </span>
+                  {/* Meaning & Context Card */}
+                  <div className={`mt-3 p-3.5 rounded-2xl border shadow-xs ${
+                    isLight 
+                      ? 'bg-white border-slate-200' 
+                      : 'bg-slate-800/90 border-slate-700'
+                  }`}>
+                    <div className="flex items-center justify-between gap-1 mb-1.5">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
+                        MEANING & CONTEXT
+                      </span>
+                      {currentAnalysis?.partOfSpeech && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                          {currentAnalysis.partOfSpeech}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Primary English Meaning */}
+                    <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug">
+                      {currentAnalysis?.translation || aiDiscovery?.translation || 'Authentic Arabic vocabulary entry'}
+                    </div>
+
+                    {/* Dual Malayalam Regional Meaning */}
+                    {(currentAnalysis?.translationMl || aiDiscovery?.translationMl) && (
+                      <div className="mt-2 flex items-baseline gap-1.5 text-xs text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 dark:bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                        <span className="font-bold shrink-0 text-[11px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Malayalam:</span>
+                        <span className="font-medium">{currentAnalysis?.translationMl || aiDiscovery?.translationMl}</span>
+                      </div>
+                    )}
+
+                    {/* Context in Current Line */}
+                    {currentSubtitle && (
+                      <div className="mt-2.5 pt-2 border-t border-slate-200/80 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-400">
+                        <span className="font-semibold block text-[10px] uppercase text-slate-400 mb-0.5">Context in Sentence:</span>
+                        <div className="font-arabic font-medium text-slate-800 dark:text-slate-200 text-right leading-relaxed text-sm" dir="rtl">
+                          {currentSubtitle.vocalizedText || currentSubtitle.text}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Action: Save Word */}
@@ -476,34 +509,34 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                     <button
                       onClick={handleSaveCurrentWord}
                       disabled={isSelectedWordSaved}
-                      className={`w-full py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      className={`w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         isSelectedWordSaved
-                          ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 cursor-default'
-                          : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs'
+                          ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 cursor-default'
+                          : 'bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white shadow-md active:scale-98'
                       }`}
                     >
                       <Bookmark className="w-3.5 h-3.5" />
-                      <span>{isSelectedWordSaved ? 'محفوظة في المفردات ✓' : 'حفظ الكلمة في بطاقات الاستذكار'}</span>
+                      <span>{isSelectedWordSaved ? 'Saved to Flashcards ✓' : 'Save Word to Flashcards'}</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Gemini AI Deep Discovery Box */}
-                <div className={`p-4 rounded-2xl border ${
-                  isLight ? 'bg-indigo-50/40 border-indigo-200' : 'bg-indigo-950/20 border-indigo-900/50'
+                <div className={`p-4 rounded-2xl border shadow-xs ${
+                  isLight ? 'bg-indigo-50/50 border-indigo-200' : 'bg-indigo-950/30 border-indigo-900/60'
                 }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                      <Sparkles className="w-4 h-4" />
-                      <span>دقة المعنى والفروق الدلالية (Gemini SLA Insight)</span>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+                      <Sparkles className="w-4 h-4 text-indigo-500" />
+                      <span>Linguistic Nuances & SLA Insights</span>
                     </div>
                     <button
                       onClick={handleDiscoverWord}
                       disabled={isDiscovering}
-                      className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer disabled:opacity-50"
+                      className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
                     >
                       {isDiscovering ? <Bot className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                      <span>{isDiscovering ? 'جارٍ التحليل...' : 'تحليل ذكي'}</span>
+                      <span>{isDiscovering ? 'Analyzing...' : 'Deep Analysis'}</span>
                     </button>
                   </div>
 
@@ -518,26 +551,37 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                     <div className="space-y-2 mt-2">
                       {aiDiscovery.commonCalqueTrap && (
                         <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs">
-                          <span className="font-bold text-rose-600 dark:text-rose-400 block mb-0.5">⚠️ خطأ شائع يجب تجنبه:</span>
-                          <p className="text-slate-700 dark:text-slate-300">{aiDiscovery.commonCalqueTrap}</p>
+                          <span className="font-bold text-rose-600 dark:text-rose-400 block mb-0.5">⚠️ Common Learner Trap to Avoid:</span>
+                          <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{aiDiscovery.commonCalqueTrap}</p>
                         </div>
                       )}
 
                       {aiDiscovery.collocations?.length > 0 && (
-                        <div className="space-y-1">
-                          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">متلازمات شائعة (Collocations):</span>
+                        <div className="space-y-1.5">
+                          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
+                            Authentic Arabic Collocations & Phrases:
+                          </span>
                           {aiDiscovery.collocations.map((c: any, idx: number) => (
-                            <div key={idx} className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
-                              <span className="font-bold text-indigo-600 dark:text-indigo-400 font-arabic">{c.phrase}</span>
-                              <p className="text-[11px] text-slate-500 italic mt-0.5">&ldquo;{c.example}&rdquo;</p>
+                            <div key={idx} className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs shadow-2xs">
+                              <span className="font-bold text-indigo-600 dark:text-indigo-400 font-arabic text-sm block" dir="rtl">
+                                {c.phrase}
+                              </span>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 italic mt-0.5">
+                                &ldquo;{c.example}&rdquo;
+                              </p>
+                              {c.meaning && (
+                                <p className="text-[11px] text-slate-700 dark:text-slate-300 font-medium mt-0.5">
+                                  {c.meaning}
+                                </p>
+                              )}
                             </div>
                           ))}
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-4 text-xs text-slate-500">
-                      <span>انقر على &ldquo;تحليل ذكي&rdquo; لاستكشاف المتلازمات اللغوية والفروق الدقيقة للكلمة.</span>
+                    <div className="text-center py-4 text-xs text-slate-500 dark:text-slate-400">
+                      <span>Click &ldquo;Deep Analysis&rdquo; to explore authentic collocations, nuance distinctions, and common learner traps.</span>
                     </div>
                   )}
                 </div>
@@ -545,7 +589,7 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
             ) : (
               <div className="text-center py-12 text-slate-400">
                 <BookOpen className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                <p className="text-xs">حدد أي كلمة عربية من التفريغ لدراسة جذرها الثلاثي ووزنها الصرفي.</p>
+                <p className="text-xs">Click any Arabic word in the transcript or video subtitles to inspect its trilateral root and pattern.</p>
               </div>
             )}
           </div>
@@ -561,11 +605,11 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
               <div className="flex items-center gap-2 mb-2">
                 <Download className="w-4 h-4 text-rose-500" />
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                  تصدير جلسة الدراسة اللغوية (Export Study Session)
+                  Export Study Session
                 </h3>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
-                قم بتصدير جميع المفردات والجمل المحفوظة في هذه الجلسة كملف ملاحظات أو بطاقات أنكي أو مستند جاهز للطباعة.
+                Export all bookmarked sentences and vocabulary from this session as Markdown notes, Anki flashcard CSV, or a printable study sheet.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -599,17 +643,17 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  الجمل المحفوظة ({savedSentences.length})
+                  Saved Sentences ({savedSentences.length})
                 </span>
               </div>
               {savedSentences.length === 0 ? (
                 <div className="text-center py-6 text-xs text-slate-400 border border-dashed rounded-xl">
-                  لم تقم بحفظ أي جمل بعد. انقر على علامة المرجعية (⭐) بجانب أي سطر في التفريغ.
+                  No sentences saved yet. Click the bookmark icon beside any subtitle line to save.
                 </div>
               ) : (
                 <div className="space-y-2">
                   {savedSentences.map(s => (
-                    <div key={s.id} className="p-3 rounded-xl border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex items-start justify-between gap-2">
+                    <div key={s.id} className="p-3 rounded-xl border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex items-start justify-between gap-2 shadow-2xs">
                       <div className="flex-1 min-w-0">
                         <div className="font-arabic font-bold text-base text-slate-900 dark:text-white" dir="rtl">
                           {s.vocalizedText || s.text}
@@ -621,7 +665,7 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                       <button
                         onClick={() => onRemoveSentence(s.id)}
                         className="p-1 text-slate-400 hover:text-rose-500 cursor-pointer"
-                        title="حذف الجملة"
+                        title="Remove sentence"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -635,17 +679,17 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  المفردات والجذور المحفوظة ({savedWords.length})
+                  Saved Vocabulary & Roots ({savedWords.length})
                 </span>
               </div>
               {savedWords.length === 0 ? (
                 <div className="text-center py-6 text-xs text-slate-400 border border-dashed rounded-xl">
-                  لم تحفظ أي مفردات بعد. انقر على أي كلمة في التفريغ لحفظها.
+                  No words saved yet. Click any word in the transcript or subtitles to inspect and save.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {savedWords.map(w => (
-                    <div key={w.id} className="p-2.5 rounded-xl border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                    <div key={w.id} className="p-2.5 rounded-xl border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2 shadow-2xs">
                       <div className="min-w-0">
                         <span className="font-arabic font-bold text-base text-indigo-600 dark:text-indigo-400 block" dir="rtl">
                           {w.vocalized || w.word}
@@ -655,14 +699,14 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                         </span>
                         {w.root && (
                           <span className="text-[10px] text-amber-600 dark:text-amber-400 font-arabic font-semibold">
-                            الجذر: {w.root}
+                            Root: {w.root}
                           </span>
                         )}
                       </div>
                       <button
                         onClick={() => onRemoveWord(w.id)}
                         className="p-1 text-slate-400 hover:text-rose-500 cursor-pointer shrink-0"
-                        title="حذف"
+                        title="Remove word"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

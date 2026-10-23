@@ -6,6 +6,7 @@
  */
 
 import { PRESET_REPHRASE_ENTRIES } from '../data/nativeRephraseData';
+import { lookupArabicWord } from './arabic';
 
 export function setupOfflineApiInterceptor() {
   if (typeof window === 'undefined') return;
@@ -455,39 +456,87 @@ async function handleOfflineMockRequest(url: string, init?: RequestInit): Promis
       success: true,
       source: 'standalone-sla-engine',
       data: {
-        translation: `സ്വാഭാവിക അർത്ഥം: "${sentence}" (${nativeLang})`,
-        explanation: 'This sentence uses high-frequency conversational phrasing common in modern colloquial media.',
+        translation: sentence,
+        explanation: 'This sentence uses authentic communicative Arabic phrasing common in spoken media and documentary storytelling.',
         keyVocabulary: [
           { word: sentence.split(' ')[0] || 'core', meaning: 'key operative phrase in this context' }
         ],
-        grammarInsight: 'Notice the natural phrasal rhythm and communicative tone conventions.',
-        casualAlternative: 'A natural everyday phrasing used in casual chats.'
+        grammarInsight: 'Notice the natural phrasal rhythm, case inflection, and communicative tone conventions.',
+        casualAlternative: 'A natural everyday phrasing used in colloquial chats.'
       }
     });
   }
 
   // 5. Deep Word Discovery
   if (url.includes('/api/ai/deep-word-discovery')) {
-    const { word = 'expression', contextSentence = '', targetLang = 'English', nativeLang = 'Malayalam' } = body;
+    const { word = 'expression' } = body;
+    const cleanW = word.trim();
+    const analysis = lookupArabicWord(cleanW);
+
+    let collocations = [
+      { phrase: `فِي ${cleanW} (Fī ${cleanW})`, example: `تُسْتَعْمَلُ الكَلِمَةُ فِي السِّيَاقِ الحِوَارِيّ`, meaning: 'Contextual prepositional use' },
+      { phrase: `مَعَ ${cleanW} (Ma‘a ${cleanW})`, example: `تَتَرَابَطُ مَعَ الأَفْعَالِ المُعَاصِرَةِ`, meaning: 'High-frequency conversational pairing' },
+      { phrase: `بِشَكْلٍ طَبِيعِيّ (Bishaklin tabī‘ī)`, example: `تُعَبِّرُ عَنِ المَعْنَى دُونَ تَرْجَمَةٍ حَرْفِيَّةٍ`, meaning: 'Natural spoken usage' }
+    ];
+    let commonCalqueTrap = `In Arabic, words like "${cleanW}" carry morphological case endings and specific verbal collocations rather than literal word-for-word translation.`;
+
+    if (cleanW.includes('فجأ') || cleanW.includes('فجا')) {
+      collocations = [
+        { phrase: 'ظَهَرَ فَجْأَةً (Zhahara faj’atan)', example: 'حَدَثَ الأَمْرُ فَجْأَةً دُونَ سَابِقِ إِنْذَارٍ', meaning: 'Appeared all of a sudden without warning' },
+        { phrase: 'تَوَقَّفَ فَجْأَةً (Tawaqqafa faj’atan)', example: 'تَوَقَّفَتِ الحَرَكَةُ فَجْأَةً فِي الطَّرِيقِ', meaning: 'Stopped abruptly / unexpectedly' },
+        { phrase: 'عَلَى غَفْلَةٍ / فَجْأَةً (Faj’atan)', example: 'جَاءَ الخَبَرُ المُفَاجِئُ فَجْأَةً', meaning: 'All of a sudden / out of nowhere' }
+      ];
+      commonCalqueTrap = `In Arabic, "فَجْأَةً" (faj'atan) functions as an adverb of manner carrying Tanween Fath (ـاً) when placed after the verb, whereas learners transferring from English/Malayalam often omit the case ending or insert literal prepositions.`;
+    } else if (cleanW.includes('سكان') || cleanW.includes('سكن')) {
+      collocations = [
+        { phrase: 'عَدَدُ السُّكَّانِ (‘Adad as-sukkān)', example: 'كَمْ عَدَدُ السُّكَّانِ الإِجْمَالِيُّ هُنَا؟', meaning: 'Total population count' },
+        { phrase: 'كِثَافَةٌ سُكَّانِيَّة (Kithāfah sukkāniyyah)', example: 'مِنْطَقَةٌ ذَاتُ كِثَافَةٍ سُكَّانِيَّةٍ عَالِيَة', meaning: 'High population density' },
+        { phrase: 'سُكَّانُ المِنْطَقَة (Sukkān al-mintaqah)', example: 'تَعَاوَنَ سُكَّانُ المِنْطَقَةِ مَعَ الحُجَّاجِ', meaning: 'Local residents / inhabitants' }
+      ];
+      commonCalqueTrap = `"سُكَّان" is already a plural noun (broken plural of ساكن). Learners often make the error of adding sound plural suffixes.`;
+    } else if (cleanW.includes('حشود') || cleanW.includes('حشد')) {
+      collocations = [
+        { phrase: 'إِدَارَةُ الحُشُودِ (Idārat al-hushūd)', example: 'خُطَطٌ هَنْدَسِيَّةٌ مُحْكَمَةٌ لإِدَارَةِ الحُشُودِ', meaning: 'Crowd management and engineering' },
+        { phrase: 'تَفْوِيجُ الحُشُودِ (Tafwīj al-hushūd)', example: 'تَفْوِيجُ الحُجَّاجِ إِلَى الجَمَرَاتِ فِي مَوَاعِيدَ مُحَدَّدَةٍ', meaning: 'Regulated crowd dispatching & flow' },
+        { phrase: 'حُشُودٌ مِلْيُونِيَّة (Hushūd milyūniyyah)', example: 'تَجَمَّعَتْ حُشُودٌ مِلْيُونِيَّةٌ فِي صَعِيدِ عَرَفَات', meaning: 'Massive million-strong crowds' }
+      ];
+      commonCalqueTrap = `In crowd management contexts, "إدارة الحشود" is the standard institutional collocation rather than literal translation of "crowd control".`;
+    } else if (cleanW.includes('عرف') || cleanW.includes('عرفة')) {
+      collocations = [
+        { phrase: 'صَعِيدُ عَرَفَات (Sa‘īd ‘Arafāt)', example: 'وَقَفَ الحُجَّاجُ فِي صَعِيدِ عَرَفَات الطَّاهِر', meaning: 'The Sacred Plain of Arafat' },
+        { phrase: 'يَوْمُ عَرَفَة (Yawmu ‘Arafah)', example: 'يَوْمُ عَرَفَة هُوَ أَعْظَمُ أَيَّامِ الحَجِّ', meaning: 'The Day of Arafah (9th of Dhul-Hijjah)' },
+        { phrase: 'جَبَلُ الرَّحْمَة (Jabal ar-Rahmah)', example: 'تَوَافَدَ الزُّوَّارُ عَلَى جَبَلِ الرَّحْمَةِ لِلدُّعَاءِ', meaning: 'Mount Mercy in Arafat' }
+      ];
+      commonCalqueTrap = `"عرفة" is treated as a diptote (ممنوع من الصرف) and is used without nunation when referring to the holy site.`;
+    } else if (cleanW.includes('منى') || cleanW.includes('مشعر')) {
+      collocations = [
+        { phrase: 'المَشَاعِرُ المُقَدَّسَة (Al-Mashā‘ir al-Muqaddasah)', example: 'خِدْمَاتٌ مُتَكَامِلَةٌ فِي المَشَاعِرِ المُقَدَّسَةِ', meaning: 'The Sacred Sites (Mina, Arafat, Muzdalifah)' },
+        { phrase: 'مَدِينَةُ الخِيَام (Madīnat al-Khiyām)', example: 'تُعْرَفُ مِنَى بِأَنَّهَا أَكْبَرُ مَدِينَةِ خِيَامٍ فِي العَالَم', meaning: 'The City of Tents (Mina)' },
+        { phrase: 'أَيَّامُ التَّشْرِيق (Ayyām at-Tashrīq)', example: 'يَبِيتُ الحُجَّاجُ بِمِنَى لَيَالِيَ التَّشْرِيقِ', meaning: 'The Days of Tashreeq (11th, 12th, 13th)' }
+      ];
+      commonCalqueTrap = `"مشعر" takes the broken plural "مشاعر" which in other contexts means "feelings/emotions", but in pilgrimage contexts strictly denotes "sacred sites/stations".`;
+    } else if (cleanW.includes('إسعاف') || cleanW.includes('صح') || cleanW.includes('مرض')) {
+      collocations = [
+        { phrase: 'سَيَّارَةُ إِسْعَافٍ مُجَهَّزَة (Sayyārat is‘āf)', example: 'تَحَرَّكَتْ سَيَّارَاتُ الإِسْعَافِ بِسُرْعَةٍ قُصْوَى', meaning: 'Fully-equipped emergency ambulance' },
+        { phrase: 'عِنَايَةٌ مُرَكَّزَةٌ مُتَنَقِّلَة (Mobile ICU)', example: 'تَوَفُّرُ عِنَايَةٍ مُرَكَّزَةٍ مُتَنَقِّلَةٍ لِكُلِّ مَرِيضٍ', meaning: 'Mobile intensive care unit' },
+        { phrase: 'قَافِلَةٌ طِبِّيَّة (Medical Convoy)', example: 'انْطَلَقَتِ القَافِلَةُ الطِّبِّيَّةُ لِنَقْلِ المَرْضَى', meaning: 'Medical ambulance convoy' }
+      ];
+      commonCalqueTrap = `In Arabic, "إسعاف" (is‘āf) means emergency relief or first aid, while "عناية مركزة" is the precise term for intensive care (ICU).`;
+    }
+
     return createJsonResponse({
       success: true,
       source: 'standalone-sla-engine',
       discovery: {
-        word,
-        translation: `സ്വാഭാവിക അർത്ഥം: "${word}"`,
-        transliteration: word,
-        definition: `Contextual meaning of "${word}" when used in authentic conversation.`,
-        collocations: [
-          { phrase: `make ${word}`, example: `They decided to make ${word} together.`, meaning: 'High-frequency combination' },
-          { phrase: `take ${word}`, example: `Please take ${word} into consideration.`, meaning: 'Standard conversational collocation' },
-          { phrase: `real ${word}`, example: `That was a real ${word} moment.`, meaning: 'Informal emphatic use' }
-        ],
-        commonCalqueTrap: `Learners often use literal word-for-word translation instead of pairing "${word}" with its natural verb.`,
-        culturalNuance: `Frequently used in modern spoken English; appropriate across casual and professional contexts.`,
-        register: 'Conversational',
-        synonyms: [
-          { word: `${word} alternative`, nuance: 'Slightly more formal variation' }
-        ]
+        word: cleanW,
+        translation: analysis.translation,
+        translationMl: analysis.translationMl,
+        transliteration: analysis.transliteration,
+        definition: `${analysis.translation} — ${analysis.translationMl}`,
+        collocations,
+        commonCalqueTrap,
+        culturalNuance: `Standard conversational and documentary Arabic term. Widely used in modern media and daily conversation across the Arab world.`,
+        register: 'Standard & Spoken Arabic (فصحى وعامية)'
       }
     });
   }
