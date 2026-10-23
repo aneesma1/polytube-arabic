@@ -1,0 +1,6 @@
+{
+  "name": "LingoTube Web - Dual Subtitle YouTube Language Player",
+  "description": "Watch and study any YouTube video with dual subtitles, interactive clickable word translations, sentence repeat, and custom YouTube link pasting and embedding.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
