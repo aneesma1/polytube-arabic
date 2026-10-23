@@ -473,14 +473,24 @@ async function handleOfflineMockRequest(url: string, init?: RequestInit): Promis
     const cleanW = word.trim();
     const analysis = lookupArabicWord(cleanW);
 
-    let collocations = [
-      { phrase: `فِي ${cleanW} (Fī ${cleanW})`, example: `تُسْتَعْمَلُ الكَلِمَةُ فِي السِّيَاقِ الحِوَارِيّ`, meaning: 'Contextual prepositional use' },
-      { phrase: `مَعَ ${cleanW} (Ma‘a ${cleanW})`, example: `تَتَرَابَطُ مَعَ الأَفْعَالِ المُعَاصِرَةِ`, meaning: 'High-frequency conversational pairing' },
-      { phrase: `بِشَكْلٍ طَبِيعِيّ (Bishaklin tabī‘ī)`, example: `تُعَبِّرُ عَنِ المَعْنَى دُونَ تَرْجَمَةٍ حَرْفِيَّةٍ`, meaning: 'Natural spoken usage' }
-    ];
+    let collocations: any[] = [];
     let commonCalqueTrap = `In Arabic, words like "${cleanW}" carry morphological case endings and specific verbal collocations rather than literal word-for-word translation.`;
 
-    if (cleanW.includes('فجأ') || cleanW.includes('فجا')) {
+    if (cleanW.includes('استعرض') || cleanW.includes('يستعرض') || cleanW.includes('عرض')) {
+      collocations = [
+        { phrase: 'يَسْتَعْرِضُ المَوْضُوعَ (Yasta‘ridu al-mawdū‘)', example: 'يَسْتَعْرِضُ الإِعْلاَمِيُّ المَوْضُوعَ بِالتَّفْصِيلِ', meaning: 'Presents and explores the subject in depth' },
+        { phrase: 'يَسْتَعْرِضُ الخُطَّةَ (Yasta‘ridu al-khuttah)', example: 'يَسْتَعْرِضُ المَسْؤُولُونَ خُطَّةَ الطَّوَارِئِ', meaning: 'Reviews and examines the operational plan' },
+        { phrase: 'يَسْتَعْرِضُ التَّفَاصِيلَ (Yasta‘ridu at-tafāsīl)', example: 'يَسْتَعْرِضُ التَّقْرِيرُ أَهَمَّ التَّفَاصِيلِ', meaning: 'Outlines and highlights the key details' }
+      ];
+      commonCalqueTrap = `In Arabic, "يَسْتَعْرِضُ" is an augmented Form X verb (استفعل) indicating comprehensive examination and presentation. Learners translating from English "shows" often incorrectly reach for "يُظْهِرُ", whereas native media specifically uses "يَسْتَعْرِضُ" for structured presentations and reviews.`;
+    } else if (cleanW.includes('إدار') || cleanW.includes('ادار') || cleanW.includes('دير')) {
+      collocations = [
+        { phrase: 'إِدَارَةُ الأَزَمَاتِ (Idārat al-azamāt)', example: 'فِرَقٌ مُتَخَصِّصَةٌ فِي إِدَارَةِ الأَزَمَاتِ وَالطَّوَارِئِ', meaning: 'Crisis management and emergency response' },
+        { phrase: 'إِدَارَةُ الحُشُودِ (Idārat al-hushūd)', example: 'خُطَطٌ هَنْدَسِيَّةٌ مُحْكَمَةٌ لإِدَارَةِ الحُشُودِ', meaning: 'Crowd management and engineering' },
+        { phrase: 'إِدَارَةٌ ذَكِيَّة (Idārah dhakiyyah)', example: 'تَطْبِيقُ أَنْظِمَةِ الإِدَارَةِ الذَّكِيَّةِ لِخِدْمَةِ الحَجِيجِ', meaning: 'Smart automated management systems' }
+      ];
+      commonCalqueTrap = `"إدارة" takes the Form IV verbal noun pattern (إِفَالَة from أَدَارَ). In institutional contexts, "إدارة الحشود" is the standard collocation rather than literal translation of "crowd control".`;
+    } else if (cleanW.includes('فجأ') || cleanW.includes('فجا')) {
       collocations = [
         { phrase: 'ظَهَرَ فَجْأَةً (Zhahara faj’atan)', example: 'حَدَثَ الأَمْرُ فَجْأَةً دُونَ سَابِقِ إِنْذَارٍ', meaning: 'Appeared all of a sudden without warning' },
         { phrase: 'تَوَقَّفَ فَجْأَةً (Tawaqqafa faj’atan)', example: 'تَوَقَّفَتِ الحَرَكَةُ فَجْأَةً فِي الطَّرِيقِ', meaning: 'Stopped abruptly / unexpectedly' },
@@ -522,6 +532,13 @@ async function handleOfflineMockRequest(url: string, init?: RequestInit): Promis
         { phrase: 'قَافِلَةٌ طِبِّيَّة (Medical Convoy)', example: 'انْطَلَقَتِ القَافِلَةُ الطِّبِّيَّةُ لِنَقْلِ المَرْضَى', meaning: 'Medical ambulance convoy' }
       ];
       commonCalqueTrap = `In Arabic, "إسعاف" (is‘āf) means emergency relief or first aid, while "عناية مركزة" is the precise term for intensive care (ICU).`;
+    }
+
+    if (!collocations.length) {
+      collocations = [
+        { phrase: `اسْتِعْمَالُ «${cleanW}» فِي السِّيَاق (Usage)`, example: `تَرِدُ الكَلِمَةُ ضِمْنَ التَّرَاكِيبِ اللُّغَوِيَّةِ الأَصِيلَةِ فِي الإِعْلاَمِ`, meaning: 'Authentic contextual occurrence in modern Arabic media' },
+        { phrase: `المَعْنَى الدَّلاَلِيّ (Semantic Focus)`, example: `تُعَبِّرُ عَنِ المَفْهُومِ الدَّقِيقِ دُونَ حَاجَةٍ لِلتَّرْجَمَةِ الحَرْفِيَّةِ`, meaning: 'Expresses accurate contextual nuance without literal translation' }
+      ];
     }
 
     return createJsonResponse({

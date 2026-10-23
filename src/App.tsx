@@ -584,6 +584,7 @@ export default function App() {
             onRemoveSentence={handleRemoveSentence}
             videoTitle={currentVideoTitle}
             theme={theme}
+            targetTranslationLang={nativeLangCode}
           />
         </div>
       </main>
