@@ -123,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
                 title="Application Version and Build Date/Time"
               >
-                v1.4.0 • Built: Oct 23, 2026, 06:40 PM
+                v1.5.0 • Built: Oct 23, 2026, 07:25 PM
               </span>
             </div>
             <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline mt-0.5">
