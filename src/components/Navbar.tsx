@@ -10,7 +10,8 @@ import {
   Moon,
   Smartphone,
   Sparkles,
-  ArrowRightLeft
+  ArrowRightLeft,
+  BookOpen
 } from 'lucide-react';
 import { extractYouTubeId } from '../utils/youtube';
 
@@ -18,6 +19,7 @@ interface NavbarProps {
   onLoadVideo: (urlOrId: string) => void;
   onOpenExport: () => void;
   onOpenSettings: () => void;
+  onOpenLibrary?: () => void;
   onUploadSrtFile?: (file: File) => void;
   pinnedSentencesCount?: number;
   theme?: 'light' | 'dark';
@@ -30,6 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLoadVideo,
   onOpenExport,
   onOpenSettings,
+  onOpenLibrary,
   onUploadSrtFile,
   pinnedSentencesCount = 0,
   theme = 'light',
@@ -123,7 +126,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
                 title="Application Version and Build Date/Time"
               >
-                v1.5.0 • Built: Oct 23, 2026, 07:25 PM
+                v1.6.0 • Built: Oct 27, 2026, 06:30 PM
               </span>
             </div>
             <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline mt-0.5">
@@ -197,6 +200,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Smartphone className="w-3.5 h-3.5" />
               <span className="hidden md:inline">Install App</span>
+            </button>
+          )}
+
+          {/* Library Button */}
+          {onOpenLibrary && (
+            <button
+              onClick={onOpenLibrary}
+              className={`px-2.5 py-1 rounded-xl border text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer ${
+                isLight 
+                  ? 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-700' 
+                  : 'bg-rose-950/40 hover:bg-rose-900/50 border-rose-800 text-rose-300'
+              }`}
+              title="Browse Arabic Video Library & Custom Imports"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-rose-500" />
+              <span className="hidden sm:inline">Library</span>
             </button>
           )}
 

@@ -1,5 +1,5 @@
 // PolyTube Arabic Service Worker with Auto-Update Mechanism
-const CACHE_NAME = 'polytube-arabic-v1.5.0';
+const CACHE_NAME = 'polytube-arabic-v1.6.0';
 const PRECACHE_URLS = [
   './',
   './index.html',

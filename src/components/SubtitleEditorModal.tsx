@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   X, 
   FileText, 
@@ -8,7 +8,8 @@ import {
   Trash2, 
   Sparkles, 
   Layers,
-  HelpCircle
+  HelpCircle,
+  ExternalLink
 } from 'lucide-react';
 import { SubtitleItem } from '../types';
 import { parseSrtFile } from '../utils/subtitles';
@@ -33,12 +34,31 @@ export const SubtitleEditorModal: React.FC<SubtitleEditorModalProps> = ({
 }) => {
   const [tab, setTab] = useState<'paste' | 'edit'>('paste');
   const [pastedText, setPastedText] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [editableSubtitles, setEditableSubtitles] = useState<SubtitleItem[]>(
     currentSubtitles.length > 0 ? JSON.parse(JSON.stringify(currentSubtitles)) : []
   );
   const [notice, setNotice] = useState<string | null>(null);
 
   const isArabic = targetLangCode === 'ar';
+
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      if (!content) return;
+      const parsed = parseSrtFile(content);
+      if (parsed.length > 0) {
+        setEditableSubtitles(parsed);
+        setTab('edit');
+        setNotice(`Successfully loaded ${parsed.length} subtitles from ${file.name}!`);
+      } else {
+        setPastedText(content);
+        handleParsePastedText();
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
 
   const handleParsePastedText = () => {
     if (!pastedText.trim()) return;
@@ -239,10 +259,52 @@ export const SubtitleEditorModal: React.FC<SubtitleEditorModalProps> = ({
         {/* Tab 1: Paste Raw Transcript or SRT */}
         {tab === 'paste' ? (
           <div className="flex flex-col gap-3 flex-1 overflow-y-auto">
-            <div className="bg-slate-850 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed flex items-start gap-2">
+            {/* Quick Actions Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-850 rounded-xl border border-slate-800">
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".srt,.vtt,.txt"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileUpload(file);
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload .SRT / .VTT File</span>
+                </button>
+              </div>
+
+              {videoId && (
+                <a
+                  href={`https://downsub.com/?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Open DownSub in a new tab to download Arabic/English captions in 1 click"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Download .SRT via DownSub (1-Click) ↗</span>
+                </a>
+              )}
+            </div>
+
+            <div className="bg-slate-850/80 p-3 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed flex items-start gap-2">
               <HelpCircle className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
               <div>
-                <strong>How to load subtitles:</strong> You can paste standard `.srt` or `.vtt` format, or simply paste the dialogue line-by-line. The editor will automatically convert it into synchronized subtitle cards!
+                <strong>How to load subtitles for ANY YouTube video on GitHub Pages:</strong>
+                <ol className="list-decimal list-inside mt-1 space-y-1 text-slate-400 text-[11px]">
+                  <li>Click <strong>&ldquo;Download .SRT via DownSub&rdquo;</strong> to grab the official or auto-generated subtitle in 1 click, then upload it.</li>
+                  <li><strong>OR</strong> on YouTube, click <em>&ldquo;Show transcript&rdquo;</em>, copy all lines, and paste them below.</li>
+                  <li>PolyTube will automatically sync timestamps, apply Arabic Tashkeel, romanize transliteration, and save to your Library!</li>
+                </ol>
               </div>
             </div>
 

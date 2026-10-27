@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { fetchYouTubeSubtitles } from './youtube-server-fetcher.js';
 
 dotenv.config();
 
@@ -94,6 +95,24 @@ app.get('/api/health', async (req, res) => {
     models: ['gemini-3.1-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest'],
     timestamp: new Date().toISOString()
   });
+});
+
+// Universal YouTube Subtitles & Translation Extractor
+app.get('/api/youtube/subtitles', async (req, res) => {
+  const videoId = req.query.videoId as string;
+  const targetLang = (req.query.targetLang as string) || 'ar';
+  const transLang = (req.query.transLang as string) || 'en';
+
+  if (!videoId) {
+    return res.status(400).json({ success: false, error: 'videoId query parameter is required.' });
+  }
+
+  try {
+    const result = await fetchYouTubeSubtitles(videoId, targetLang, transLang);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message || 'Server error' });
+  }
 });
 
 // 2. Multilingual AI Answer Check, Calque Detection & Natural Expression Generator

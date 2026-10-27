@@ -664,7 +664,14 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
 
         {filteredSubtitles.length === 0 && (
           <div className="text-center py-12 text-slate-400 text-xs">
-            No subtitles match &ldquo;{searchQuery}&rdquo;
+            {searchQuery ? (
+              <span>No subtitles match &ldquo;{searchQuery}&rdquo;</span>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <p className="font-medium text-slate-600 dark:text-slate-300">No subtitles loaded for this video yet.</p>
+                <p className="text-[11px] text-slate-500">Upload a .srt/.vtt file with the ⬆ button or select a video from the Library.</p>
+              </div>
+            )}
           </div>
         )}
       </div>

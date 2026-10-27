@@ -10,9 +10,12 @@ import {
 } from './utils/youtube';
 import { parseSrtFile } from './utils/subtitles';
 import { CURATED_VIDEOS } from './data/curatedVideos';
+import { getAllCuratedVideos, saveDynamicVideo } from './utils/dynamicVideoLibrary';
+import { fetchUniversalSubtitles } from './utils/youtubeCaptionFetcher';
 import { MULTILINGUAL_TRANSLATIONS } from './data/multilingualTranslations';
 import { 
   SubtitleItem, 
+  CuratedVideo,
   LoopConfig, 
   SavedWord, 
   SavedSentence,
@@ -27,6 +30,8 @@ import { Splitter } from './components/Splitter';
 import { ExportModal } from './components/ExportModal';
 import { WordLookupModal } from './components/WordLookupModal';
 import { SettingsModal } from './components/SettingsModal';
+import { SubtitleEditorModal } from './components/SubtitleEditorModal';
+import { CuratedLibraryModal } from './components/CuratedLibraryModal';
 import { FloatingPlayController } from './components/FloatingPlayController';
 import { PwaUpdateToast } from './components/PwaUpdateToast';
 import { initPwaAutoUpdate } from './utils/pwaUpdate';
@@ -103,15 +108,16 @@ export default function App() {
 
   // Subtitles: Base Curated Arabic Subtitles
   const baseCuratedSubtitles = useMemo(() => {
-    const matched = CURATED_VIDEOS.find(cv => cv.youtubeId === currentVideoId);
-    return matched ? matched.subtitles : CURATED_VIDEOS[0].subtitles;
+    const all = getAllCuratedVideos();
+    const matched = all.find(cv => cv.youtubeId === currentVideoId) || CURATED_VIDEOS.find(cv => cv.youtubeId === currentVideoId);
+    return matched ? matched.subtitles : [];
   }, [currentVideoId]);
 
   const [customSubtitles, setCustomSubtitles] = useState<SubtitleItem[] | null>(null);
 
   // Dynamic Subtitles adapted to Malayalam / English translations
   const subtitles: SubtitleItem[] = useMemo(() => {
-    if (customSubtitles && customSubtitles.length > 0) {
+    if (customSubtitles !== null) {
       return customSubtitles;
     }
 
@@ -200,6 +206,8 @@ export default function App() {
   // Modals & Notifications
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
+  const [showSubtitleEditor, setShowSubtitleEditor] = useState<boolean>(false);
+  const [showLibraryModal, setShowLibraryModal] = useState<boolean>(false);
   const [activeWordLookup, setActiveWordLookup] = useState<{
     word: string;
     context: SubtitleItem;
@@ -298,18 +306,33 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentSubtitle, currentIndex, subtitles]);
 
-  // Video loader
+  // Universal Video & Subtitle Loader
   const handleLoadVideo = (urlOrId: string) => {
     const extractedId = extractYouTubeId(urlOrId);
     if (!extractedId) return;
 
     setCurrentVideoId(extractedId);
-    setCurrentVideoTitle(`Arabic Video (${extractedId})`);
     setInitialSeekTime(0);
-    setCustomSubtitles(null);
     playerControllerRef.current?.seekTo(0);
-    setShareToast(`✓ Loaded Arabic video ${extractedId}`);
-    setTimeout(() => setShareToast(null), 3000);
+
+    // 1. Check if video already exists in curated catalog or user's saved library
+    const allVideos = getAllCuratedVideos();
+    const existing = allVideos.find(v => v.youtubeId === extractedId) || CURATED_VIDEOS.find(v => v.youtubeId === extractedId);
+
+    if (existing && existing.subtitles && existing.subtitles.length > 0) {
+      setCurrentVideoTitle(existing.title);
+      setCustomSubtitles(null);
+      setShareToast(`✓ Loaded ${existing.subtitles.length} synchronized subtitles`);
+      setTimeout(() => setShareToast(null), 3000);
+      return;
+    }
+
+    // 2. New video without cached subtitles on GitHub Pages:
+    setCurrentVideoTitle(`Arabic Video (${extractedId})`);
+    setCustomSubtitles([]);
+    setShowSubtitleEditor(true);
+    setShareToast(`Drop an SRT/VTT file or paste transcript to sync subtitles.`);
+    setTimeout(() => setShareToast(null), 4000);
   };
 
   // Upload SRT
@@ -325,8 +348,24 @@ export default function App() {
         return;
       }
       setCustomSubtitles(parsed);
-      setShareToast(`✓ Loaded ${parsed.length} Arabic lines from ${file.name}`);
-      setTimeout(() => setShareToast(null), 3000);
+      const dynamicVideo: CuratedVideo = {
+        id: `yt-${currentVideoId}`,
+        youtubeId: currentVideoId,
+        title: currentVideoTitle,
+        channel: 'Uploaded Subtitles',
+        targetLang: 'Arabic',
+        targetLangCode: 'ar',
+        nativeLang: nativeLangCode === 'ml' ? 'Malayalam' : 'English',
+        nativeLangCode: nativeLangCode,
+        level: 'Intermediate',
+        category: 'Uploaded Subtitles',
+        thumbnail: `https://img.youtube.com/vi/${currentVideoId}/hqdefault.jpg`,
+        description: `Uploaded from ${file.name}`,
+        subtitles: parsed
+      };
+      saveDynamicVideo(dynamicVideo);
+      setShareToast(`✓ Loaded and saved ${parsed.length} Arabic lines from ${file.name}`);
+      setTimeout(() => setShareToast(null), 3500);
     };
     reader.readAsText(file, 'UTF-8');
   };
@@ -456,6 +495,7 @@ export default function App() {
         onLoadVideo={handleLoadVideo}
         onOpenExport={() => setShowExportModal(true)}
         onOpenSettings={() => setShowSettingsModal(true)}
+        onOpenLibrary={() => setShowLibraryModal(true)}
         onUploadSrtFile={handleUploadSrtFile}
         pinnedSentencesCount={savedSentences.length}
         theme={theme}
@@ -550,6 +590,7 @@ export default function App() {
               theme={theme}
               onPinSentence={handlePinSentence}
               isCurrentPinned={currentSubtitle ? savedSentences.some(s => s.subtitleId === currentSubtitle.id) : false}
+              onOpenEditor={() => setShowSubtitleEditor(true)}
             />
           </div>
         </div>
@@ -641,6 +682,55 @@ export default function App() {
             setShareToast('Cache cleared.');
             setTimeout(() => setShareToast(null), 2500);
           }}
+        />
+      )}
+
+      {showSubtitleEditor && (
+        <SubtitleEditorModal
+          currentSubtitles={subtitles}
+          videoId={currentVideoId}
+          videoTitle={currentVideoTitle}
+          targetLangCode="ar"
+          onClose={() => setShowSubtitleEditor(false)}
+          onSaveSubtitles={(newSubs) => {
+            setCustomSubtitles(newSubs);
+            const dynamicVideo: CuratedVideo = {
+              id: `yt-${currentVideoId}`,
+              youtubeId: currentVideoId,
+              title: currentVideoTitle,
+              channel: 'Imported Video',
+              targetLang: 'Arabic',
+              targetLangCode: 'ar',
+              nativeLang: nativeLangCode === 'ml' ? 'Malayalam' : 'English',
+              nativeLangCode: nativeLangCode,
+              level: 'Intermediate',
+              category: 'User Import',
+              thumbnail: `https://img.youtube.com/vi/${currentVideoId}/hqdefault.jpg`,
+              description: `Subtitles for ${currentVideoTitle}`,
+              subtitles: newSubs
+            };
+            saveDynamicVideo(dynamicVideo);
+            setShareToast(`✓ Saved ${newSubs.length} synchronized subtitles to your Library!`);
+            setTimeout(() => setShareToast(null), 3000);
+          }}
+        />
+      )}
+
+      {showLibraryModal && (
+        <CuratedLibraryModal
+          onSelectVideo={(video) => {
+            setCurrentVideoId(video.youtubeId);
+            setCurrentVideoTitle(video.title);
+            setCustomSubtitles(video.subtitles);
+            setShowLibraryModal(false);
+            setShareToast(`✓ Loaded "${video.title.slice(0, 35)}..." (${video.subtitles.length} lines)`);
+            setTimeout(() => setShareToast(null), 3000);
+          }}
+          onImportCustomSubtitles={(importedSubs) => {
+            setCustomSubtitles(importedSubs);
+            setShowLibraryModal(false);
+          }}
+          onClose={() => setShowLibraryModal(false)}
         />
       )}
 

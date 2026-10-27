@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
+import { fetchYouTubeSubtitles } from './youtube-server-fetcher.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +45,31 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify({ status: 'ok', llmAvailable: true, liveStatus: 'verified' }));
       return;
     }
+
+    if (reqPath.startsWith('/api/youtube/subtitles')) {
+      const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost:3000'}`);
+      const videoId = urlObj.searchParams.get('videoId');
+      const targetLang = urlObj.searchParams.get('targetLang') || 'ar';
+      const transLang = urlObj.searchParams.get('transLang') || 'en';
+
+      if (!videoId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'videoId is required' }));
+        return;
+      }
+
+      fetchYouTubeSubtitles(videoId, targetLang, transLang)
+        .then(result => {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(result));
+        })
+        .catch(err => {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: err.message || 'Server error' }));
+        });
+      return;
+    }
+
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Endpoint handled by offline SLA client engine' }));
     return;
