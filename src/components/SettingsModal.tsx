@@ -12,7 +12,11 @@ import {
   ShieldCheck, 
   RefreshCw,
   FileJson,
-  Copy
+  Copy,
+  Key,
+  Sparkles,
+  ExternalLink,
+  Save
 } from 'lucide-react';
 import { 
   BackupPayload, 
@@ -21,6 +25,7 @@ import {
   SavedWord, 
   VideoCollection 
 } from '../types';
+import { getSavedGeminiKey, saveGeminiKey } from '../utils/aiClientService';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -58,7 +63,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [copyNotice, setCopyNotice] = useState(false);
   const [importNotice, setImportNotice] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [geminiKey, setGeminiKey] = useState<string>(getSavedGeminiKey());
+  const [keySavedNotice, setKeySavedNotice] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSaveGeminiKey = () => {
+    saveGeminiKey(geminiKey);
+    setKeySavedNotice(true);
+    setTimeout(() => setKeySavedNotice(false), 3000);
+  };
 
   if (!isOpen) return null;
 
@@ -241,6 +254,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               >
                 {copyNotice ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copyNotice ? 'Link Copied to Clipboard!' : 'Copy Shareable Link'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Section 2.5: Google Gemini AI API Key (Universal AI on GitHub Pages) */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-slate-850 to-slate-900 border border-indigo-500/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-400" />
+                <h3 className="text-sm font-bold text-slate-100">
+                  Google Gemini AI Key (Enables Deep Analysis for Any Video)
+                </h3>
+              </div>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 hover:underline"
+              >
+                <span>Get Free Key</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Enables real-time SLA linguistic nuances, cultural context, and dialectal explanations for <strong>any Arabic video</strong> directly on GitHub Pages. Your key stays 100% private in your browser.
+            </p>
+
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Key className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="password"
+                  value={geminiKey}
+                  onChange={(e) => setGeminiKey(e.target.value)}
+                  placeholder="AIzaSy... (Paste Gemini API Key)"
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
+                />
+              </div>
+              <button
+                onClick={handleSaveGeminiKey}
+                className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm shrink-0"
+              >
+                {keySavedNotice ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Save className="w-3.5 h-3.5" />}
+                <span>{keySavedNotice ? 'Saved!' : 'Save Key'}</span>
               </button>
             </div>
           </div>

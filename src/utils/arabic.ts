@@ -10,6 +10,81 @@ export function removeTashkeel(text: string): string {
   return text.replace(ARABIC_HARAKAT_REGEX, '');
 }
 
+export function hasTashkeel(text: string): boolean {
+  if (!text) return false;
+  return /[\u064B-\u0652\u0670]/.test(text);
+}
+
+// Common Arabic vocalized dictionary for high-frequency particles, prepositions, conjunctions, and core words
+export const COMMON_PARTICLES_VOCALIZED: Record<string, string> = {
+  'و': 'وَ',
+  'ف': 'فَ',
+  'في': 'فِي',
+  'من': 'مِنْ',
+  'عن': 'عَنْ',
+  'الى': 'إِلَى',
+  'إلى': 'إِلَى',
+  'على': 'عَلَى',
+  'ان': 'أَنْ',
+  'أن': 'أَنْ',
+  'إن': 'إِنَّ',
+  'هذا': 'هٰذَا',
+  'هذه': 'هٰذِهِ',
+  'ذلك': 'ذٰلِكَ',
+  'الله': 'اللّٰه',
+  'لا': 'لَا',
+  'ما': 'مَا',
+  'مع': 'مَعَ',
+  'ثم': 'ثُمَّ',
+  'كل': 'كُلّ',
+  'غير': 'غَيْر',
+  'بين': 'بَيْنَ',
+  'بعد': 'بَعْدَ',
+  'قبل': 'قَبْلَ',
+  'حتى': 'حَتَّى',
+  'أو': 'أَوْ',
+  'نعم': 'نَعَمْ',
+  'كان': 'كَانَ',
+  'كانت': 'كَانَتْ',
+  'ليس': 'لَيْسَ',
+  'هو': 'هُوَ',
+  'هي': 'هِيَ',
+  'هم': 'هُمْ',
+  'أنا': 'أَنَا',
+  'نحن': 'نَحْنُ',
+  'أنت': 'أَنْتَ',
+  'شكرا': 'شُكْرًا',
+  'مرحبا': 'مَرْحَبًا',
+  'أهلا': 'أَهْلًا',
+  'جدا': 'جِدًّا',
+  'أيضا': 'أَيْضًا',
+  'فقط': 'فَقَطْ',
+};
+
+/**
+ * Client-Side Smart Vocalizer:
+ * Enriches raw Arabic sentences with authentic Tashkeel on high-frequency particles, prepositions, and words.
+ */
+export function smartVocalizeParticles(text: string): string {
+  if (!text) return '';
+  if (hasTashkeel(text)) return text;
+
+  const tokens = text.split(/(\s+|[،.؟!:;"'(){}\[\]])/);
+  return tokens.map(token => {
+    const clean = removeTashkeel(token).trim();
+    if (COMMON_PARTICLES_VOCALIZED[clean]) {
+      return token.replace(clean, COMMON_PARTICLES_VOCALIZED[clean]);
+    }
+    if (clean.startsWith('ال') && clean.length > 3) {
+      return token.replace(/^ال/, 'الْ');
+    }
+    if (clean.startsWith('و') && clean.length > 2) {
+      return 'وَ' + token.slice(1);
+    }
+    return token;
+  }).join('');
+}
+
 // Clean Arabic word from punctuation and strip diacritics for dictionary lookup
 export function cleanArabicWord(word: string): string {
   if (!word) return '';

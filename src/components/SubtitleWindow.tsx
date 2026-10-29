@@ -17,7 +17,7 @@ import {
   Bookmark
 } from 'lucide-react';
 import { SubtitleItem, LoopConfig } from '../types';
-import { speakWord, cleanArabicWord } from '../utils/arabic';
+import { speakWord, cleanArabicWord, removeTashkeel, hasTashkeel, smartVocalizeParticles } from '../utils/arabic';
 import { formatTime } from '../utils/youtube';
 
 interface SubtitleWindowProps {
@@ -100,9 +100,15 @@ export const SubtitleWindow: React.FC<SubtitleWindowProps> = ({
   const getTargetText = (item: SubtitleItem) => {
     if (isArabic) {
       if (!showTashkeel) {
-        return (item.text || item.vocalizedText || '').replace(/[\u064B-\u065F\u0670]/g, '');
+        return removeTashkeel(item.text || item.vocalizedText || '');
       }
-      return item.vocalizedText || item.text;
+      if (item.vocalizedText && hasTashkeel(item.vocalizedText)) {
+        return item.vocalizedText;
+      }
+      if (hasTashkeel(item.text)) {
+        return item.text;
+      }
+      return smartVocalizeParticles(item.text || item.vocalizedText || '');
     }
     return item.text;
   };

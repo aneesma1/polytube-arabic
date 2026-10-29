@@ -95,22 +95,23 @@ export interface FetchSubtitlesResult {
 
 /**
  * Universal Subtitle Fetcher for Client
- * Attempts to fetch subtitles via server API or localhost, with proper error handling.
+ * Attempts to fetch subtitles via server API, direct timedtext, or CORS proxies with seamless error handling.
  */
 export async function fetchUniversalSubtitles(
   videoId: string,
   targetLang: string = 'ar',
   transLang: string = 'en'
 ): Promise<FetchSubtitlesResult> {
-  const endpoints = [
+  // 1. Try local server endpoint if running in hybrid mode
+  const localEndpoints = [
     `/api/youtube/subtitles?videoId=${encodeURIComponent(videoId)}&targetLang=${encodeURIComponent(targetLang)}&transLang=${encodeURIComponent(transLang)}`,
     `http://localhost:3000/api/youtube/subtitles?videoId=${encodeURIComponent(videoId)}&targetLang=${encodeURIComponent(targetLang)}&transLang=${encodeURIComponent(transLang)}`
   ];
 
-  for (const url of endpoints) {
+  for (const url of localEndpoints) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timeoutId);
 
@@ -118,28 +119,95 @@ export async function fetchUniversalSubtitles(
         const data = await res.json();
         if (data && data.success && Array.isArray(data.subtitles) && data.subtitles.length > 0) {
           return data;
-        } else if (data && data.error) {
-          return {
-            success: false,
-            videoId,
-            title: data.title || `YouTube Video (${videoId})`,
-            channel: data.channel || '',
-            subtitles: [],
-            error: data.error
-          };
         }
       }
     } catch {
-      // Try next endpoint candidate
+      // Local server not running, continue to client-side fetching
     }
   }
 
+  // 2. Client-side fetching on GitHub Pages via direct YouTube timedtext & CORS proxies
+  const timedTextUrls = [
+    `https://www.youtube.com/api/timedtext?v=${videoId}&lang=${targetLang}&fmt=srv3`,
+    `https://www.youtube.com/api/timedtext?v=${videoId}&lang=${targetLang}`,
+    `https://www.youtube.com/api/timedtext?v=${videoId}&lang=a.${targetLang}&fmt=srv3`,
+    `https://www.youtube.com/api/timedtext?v=${videoId}&lang=a.${targetLang}`
+  ];
+
+  for (const directUrl of timedTextUrls) {
+    const candidateUrls = [
+      directUrl,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`
+    ];
+
+    for (const url of candidateUrls) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const xml = await res.text();
+          if (xml && (xml.includes('<p ') || xml.includes('<text '))) {
+            const cues = parseXmlCues(xml);
+            if (cues.length > 0) {
+              // Try fetching translated cues
+              let transCues: { start: number; end: number; text: string }[] = [];
+              if (transLang && transLang !== targetLang) {
+                try {
+                  const transUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`${directUrl}&tlang=${transLang}`)}`;
+                  const transRes = await fetch(transUrl, { signal: AbortSignal.timeout(4000) });
+                  if (transRes.ok) {
+                    const transXml = await transRes.text();
+                    transCues = parseXmlCues(transXml);
+                  }
+                } catch {
+                  // Translation optional
+                }
+              }
+
+              const subtitles: SubtitleItem[] = cues.map((cue, idx) => {
+                let translation = '—';
+                if (transCues.length > 0) {
+                  const match = transCues.find(tc => (tc.start < cue.end && tc.end > cue.start) || Math.abs(tc.start - cue.start) < 1.0);
+                  if (match) translation = match.text;
+                }
+                return {
+                  id: idx + 1,
+                  start: cue.start,
+                  end: cue.end,
+                  text: cue.text,
+                  vocalizedText: cue.text,
+                  transliteration: transliterateArabicText(cue.text),
+                  translation: translation,
+                  notes: ''
+                };
+              });
+
+              return {
+                success: true,
+                videoId,
+                title: `YouTube Video (${videoId})`,
+                channel: 'YouTube Captions',
+                subtitles
+              };
+            }
+          }
+        }
+      } catch {
+        // Try next candidate
+      }
+    }
+  }
+
+  // 3. Fallback: Friendly guide for GitHub Pages with 1-click DownSub or transcript copy
   return {
     success: false,
     videoId,
     title: `YouTube Video (${videoId})`,
     channel: '',
     subtitles: [],
-    error: 'Could not connect to YouTube subtitle server. Please ensure the app is running with start-app.bat, or upload an SRT file.'
+    error: 'YouTube requires client transcript paste or SRT upload. Please use the 1-Click DownSub button or paste the YouTube transcript.'
   };
 }

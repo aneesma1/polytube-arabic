@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { SubtitleItem, LoopConfig } from '../types';
 import { formatTime } from '../utils/youtube';
-import { speakWord } from '../utils/arabic';
+import { speakWord, hasTashkeel, smartVocalizeParticles } from '../utils/arabic';
 
 export type TranscriptFontSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -522,7 +522,11 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
                       }`}
                       dir={isArabic ? 'rtl' : 'ltr'}
                     >
-                      {item.vocalizedText || item.text}
+                      {item.vocalizedText && hasTashkeel(item.vocalizedText) 
+                        ? item.vocalizedText 
+                        : hasTashkeel(item.text) 
+                        ? item.text 
+                        : smartVocalizeParticles(item.text || item.vocalizedText || '')}
                     </p>
                   )}
 

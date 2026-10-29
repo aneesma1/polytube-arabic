@@ -15,15 +15,20 @@ import {
   AlertTriangle,
   Search,
   ExternalLink,
-  Globe
+  Globe,
+  Key
 } from 'lucide-react';
 import { SubtitleItem, LoopConfig, SavedWord, SavedSentence } from '../types';
 import { 
   cleanArabicWord, 
   lookupArabicWord, 
   transliterateArabic, 
-  speakWord 
+  speakWord,
+  removeTashkeel,
+  hasTashkeel,
+  smartVocalizeParticles
 } from '../utils/arabic';
+import { analyzeWordWithAI, getSavedGeminiKey } from '../utils/aiClientService';
 import { 
   exportToMarkdown, 
   exportToAnkiCsv, 
@@ -94,6 +99,10 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
   }, [currentSubtitle, selectedWord]);
 
   // Scroll active subtitle into view in transcript - centered vertically
+  const hasSourceTashkeel = React.useMemo(() => {
+    return subtitles.some(s => hasTashkeel(s.vocalizedText || s.text || ''));
+  }, [subtitles]);
+
   const activeLineRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (activeTab === 'transcript' && activeLineRef.current) {
@@ -114,34 +123,35 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
     handleDiscoverWord(clean);
   };
 
-  // Trigger Gemini Deep Discovery for the selected word
+  // Trigger Gemini Deep Discovery for the selected word directly client-side
   const handleDiscoverWord = async (wordToDiscover?: string) => {
     const targetWord = wordToDiscover || selectedWord;
     if (!targetWord) return;
     setIsDiscovering(true);
     setAiError(null);
-    try {
-      const res = await fetch('/api/ai/deep-word-discovery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          word: targetWord,
-          contextSentence: currentSubtitle?.text || '',
-          targetLang: 'Arabic',
-          nativeLang: targetTranslationLang === 'en' ? 'English' : 'Malayalam'
-        })
-      });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.discovery) {
-          setAiDiscovery(data.discovery);
-          return;
-        }
+    const hasKey = Boolean(getSavedGeminiKey());
+    if (!hasKey) {
+      setIsDiscovering(false);
+      setAiError('need_key');
+      return;
+    }
+
+    try {
+      const res = await analyzeWordWithAI(
+        targetWord,
+        currentSubtitle?.text || '',
+        'Arabic',
+        targetTranslationLang === 'en' ? 'English' : 'Malayalam'
+      );
+
+      if (res.success && res.discovery) {
+        setAiDiscovery(res.discovery);
+      } else {
+        setAiError(res.error || 'Could not complete AI analysis');
       }
-      setAiError('Offline mode. Using local Arabic morphological dictionary.');
-    } catch {
-      setAiError('Offline mode. Local Arabic morphology active.');
+    } catch (err: any) {
+      setAiError(err.message || 'AI service error');
     } finally {
       setIsDiscovering(false);
     }
@@ -275,9 +285,9 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                 ? isLight ? 'bg-rose-50 text-rose-700 border-rose-300' : 'bg-rose-950/50 text-rose-300 border-rose-800'
                 : isLight ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-slate-800 text-slate-400 border-slate-700'
             }`}
-            title="Toggle Arabic Tashkeel / Harakat vowels"
+            title={hasSourceTashkeel ? "Toggle Arabic Tashkeel / Harakat vowels" : "Tashkeel: Smart core particles enabled (Raw source has no Harakat)"}
           >
-            {showTashkeel ? 'Vowels ON ✓' : 'Vowels OFF'}
+            {showTashkeel ? (hasSourceTashkeel ? 'Vowels ON ✓' : 'Vowels ON (Core) ✓') : 'Vowels OFF'}
           </button>
         </div>
       </div>
@@ -298,9 +308,16 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
             {subtitles.map((sub, idx) => {
               const isActive = idx === currentIndex;
               const isPinned = savedSentences.some(s => s.subtitleId === sub.id);
-              const displayText = showTashkeel 
-                ? (sub.vocalizedText || sub.text) 
-                : (sub.text || sub.vocalizedText || '').replace(/[\u064B-\u065F\u0670]/g, '');
+              let displayText = '';
+              if (!showTashkeel) {
+                displayText = removeTashkeel(sub.text || sub.vocalizedText || '');
+              } else if (sub.vocalizedText && hasTashkeel(sub.vocalizedText)) {
+                displayText = sub.vocalizedText;
+              } else if (hasTashkeel(sub.text)) {
+                displayText = sub.text;
+              } else {
+                displayText = smartVocalizeParticles(sub.text || sub.vocalizedText || '');
+              }
               const words = displayText.split(/\s+/);
 
               return (
@@ -475,40 +492,32 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                     </span>
                   </div>
 
-                  {/* Root and Pattern Metric Cards */}
-                  <div className="grid grid-cols-2 gap-2 mt-4">
-                    <div className={`p-3 rounded-2xl border-2 text-center shadow-xs ${
-                      isLight 
-                        ? 'bg-amber-50 border-amber-300' 
-                        : 'bg-amber-950/40 border-amber-700'
-                    }`}>
-                      <span className="text-[11px] uppercase font-black tracking-wider block mb-1 text-amber-900 dark:text-amber-300">
-                        TRILATERAL ROOT (الجذر)
-                      </span>
-                      <span 
-                        className="text-3xl font-black font-arabic tracking-widest block"
-                        style={{ color: isLight ? '#78350f' : '#fef3c7' }}
-                      >
-                        {currentAnalysis?.root || '—'}
-                      </span>
-                    </div>
+                  {/* AI Root & Pattern (Dynamic across ANY video) */}
+                  {aiDiscovery?.root && (
+                    <div className="grid grid-cols-2 gap-2 mt-4">
+                      <div className={`p-3 rounded-2xl border-2 text-center shadow-xs ${
+                        isLight ? 'bg-amber-50 border-amber-300' : 'bg-amber-950/40 border-amber-700'
+                      }`}>
+                        <span className="text-[11px] uppercase font-black tracking-wider block mb-1 text-amber-900 dark:text-amber-300">
+                          AI ROOT (الجذر)
+                        </span>
+                        <span className="text-2xl font-black font-arabic tracking-widest block" style={{ color: isLight ? '#78350f' : '#fef3c7' }}>
+                          {aiDiscovery.root}
+                        </span>
+                      </div>
 
-                    <div className={`p-3 rounded-2xl border-2 text-center shadow-xs ${
-                      isLight 
-                        ? 'bg-emerald-50 border-emerald-300' 
-                        : 'bg-emerald-950/40 border-emerald-700'
-                    }`}>
-                      <span className="text-[11px] uppercase font-black tracking-wider block mb-1 text-emerald-900 dark:text-emerald-300">
-                        MEASURE / PATTERN (الوزن)
-                      </span>
-                      <span 
-                        className="text-3xl font-black font-arabic tracking-wide block"
-                        style={{ color: isLight ? '#064e3b' : '#d1fae5' }}
-                      >
-                        {currentAnalysis?.pattern || '—'}
-                      </span>
+                      <div className={`p-3 rounded-2xl border-2 text-center shadow-xs ${
+                        isLight ? 'bg-emerald-50 border-emerald-300' : 'bg-emerald-950/40 border-emerald-700'
+                      }`}>
+                        <span className="text-[11px] uppercase font-black tracking-wider block mb-1 text-emerald-900 dark:text-emerald-300">
+                          AI PATTERN (الوزن)
+                        </span>
+                        <span className="text-2xl font-black font-arabic tracking-wide block" style={{ color: isLight ? '#064e3b' : '#d1fae5' }}>
+                          {aiDiscovery.pattern || '—'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Meaning & Context Card */}
                   <div className={`mt-3 p-4 rounded-2xl border-2 shadow-xs ${
@@ -628,12 +637,22 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                     </button>
                   </div>
 
-                  {aiError && (
+                  {aiError === 'need_key' ? (
+                    <div className="p-3 rounded-xl bg-indigo-500/10 border-2 border-indigo-500/30 text-indigo-950 dark:text-indigo-200 text-xs mb-2.5 space-y-1.5">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <Key className="w-4 h-4 text-indigo-500" />
+                        <span>Google Gemini API Key Required</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-normal leading-relaxed">
+                        To enable real-time AI word analysis and cultural insights for <strong>any YouTube video</strong> on GitHub Pages, add your free key in <strong>Settings (⚙)</strong>.
+                      </p>
+                    </div>
+                  ) : aiError ? (
                     <div className="p-2.5 rounded-xl bg-amber-500/10 border-2 border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs font-semibold flex items-center gap-1.5 mb-2.5">
                       <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
                       <span>{aiError}</span>
                     </div>
-                  )}
+                  ) : null}
 
                   {aiDiscovery ? (
                     <div className="space-y-3 mt-2">

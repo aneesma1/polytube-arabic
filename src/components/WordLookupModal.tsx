@@ -16,6 +16,7 @@ import {
   transliterateArabic, 
   speakWord 
 } from '../utils/arabic';
+import { analyzeWordWithAI, getSavedGeminiKey } from '../utils/aiClientService';
 
 interface WordLookupModalProps {
   word: string;
@@ -54,28 +55,20 @@ export const WordLookupModal: React.FC<WordLookupModalProps> = ({
   const handleDiscoverWord = async () => {
     setIsDiscovering(true);
     setAiError(null);
+    if (!getSavedGeminiKey()) {
+      setIsDiscovering(false);
+      setAiError('Please enter your free Google Gemini API Key in Settings (⚙) to enable AI word analysis on GitHub Pages.');
+      return;
+    }
     try {
-      const res = await fetch('/api/ai/deep-word-discovery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          word: clean,
-          contextSentence: contextSubtitle?.text || '',
-          targetLang: isArabic ? 'Arabic' : 'English',
-          nativeLang: 'Malayalam'
-        })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.discovery) {
-          setAiDiscovery(data.discovery);
-          return;
-        }
+      const res = await analyzeWordWithAI(clean, contextSubtitle?.text || '', isArabic ? 'Arabic' : 'English', 'Malayalam');
+      if (res.success && res.discovery) {
+        setAiDiscovery(res.discovery);
+      } else {
+        setAiError(res.error || 'AI analysis unavailable');
       }
-      setAiError('Could not fetch AI nuances right now. Local dictionary is active.');
     } catch (err: any) {
-      setAiError('Gemini offline. Using dictionary definitions.');
+      setAiError(err.message || 'Gemini connection error');
     } finally {
       setIsDiscovering(false);
     }
