@@ -255,7 +255,11 @@ export function getAllCuratedVideos(): CuratedVideo[] {
     const stored = localStorage.getItem(STORAGE_KEY_DYNAMIC_VIDEOS);
     if (stored) {
       const dynamicList: CuratedVideo[] = JSON.parse(stored);
-      dynamicList.forEach((v) => mergedMap.set(v.id, v));
+      dynamicList.forEach((v) => {
+        if (!mergedMap.has(v.id)) {
+          mergedMap.set(v.id, v);
+        }
+      });
     }
   } catch (err) {
     console.warn('Could not load dynamic videos from storage:', err);

@@ -16,7 +16,7 @@ cd dist
 if exist ".git" rd /s /q ".git"
 git init
 git add -A
-git commit -m "Deploy v1.6.0 to GitHub Pages"
+git commit -m "Deploy v1.7.0 with centered auto-scroll, reverse subtitle seek, and full Tashkeel vocalization"
 git push -f https://github.com/aneesma1/polytube-arabic.git HEAD:gh-pages
 rd /s /q ".git"
 

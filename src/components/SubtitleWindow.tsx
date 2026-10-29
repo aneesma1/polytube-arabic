@@ -98,8 +98,11 @@ export const SubtitleWindow: React.FC<SubtitleWindowProps> = ({
   );
 
   const getTargetText = (item: SubtitleItem) => {
-    if (isArabic && showTashkeel && item.vocalizedText) {
-      return item.vocalizedText;
+    if (isArabic) {
+      if (!showTashkeel) {
+        return (item.text || item.vocalizedText || '').replace(/[\u064B-\u065F\u0670]/g, '');
+      }
+      return item.vocalizedText || item.text;
     }
     return item.text;
   };

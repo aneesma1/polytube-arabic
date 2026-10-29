@@ -125,7 +125,7 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     if (autoScroll && activeItemRef.current && scrollContainerRef.current) {
       activeItemRef.current.scrollIntoView({
         behavior: 'smooth',
-        block: 'nearest',
+        block: 'center',
       });
     }
   }, [currentIndex, autoScroll]);
@@ -390,7 +390,14 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
             <div
               key={item.id}
               ref={isActive ? activeItemRef : null}
-              className={`group p-3 rounded-xl transition-all border ${
+              onClick={() => {
+                if (isMultiSelectMode) {
+                  toggleSelectIndex(idxToUse);
+                } else {
+                  onSeekToSubtitle(item);
+                }
+              }}
+              className={`group p-3 rounded-xl transition-all border cursor-pointer ${
                 isItemLooping
                   ? isLight
                     ? 'bg-amber-50 border-amber-400 ring-2 ring-amber-400 shadow-md'

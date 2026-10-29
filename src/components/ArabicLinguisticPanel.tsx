@@ -93,13 +93,13 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
     }
   }, [currentSubtitle, selectedWord]);
 
-  // Scroll active subtitle into view in transcript
+  // Scroll active subtitle into view in transcript - centered vertically
   const activeLineRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (activeTab === 'transcript' && activeLineRef.current) {
       activeLineRef.current.scrollIntoView({
         behavior: 'smooth',
-        block: 'nearest',
+        block: 'center',
       });
     }
   }, [currentIndex, activeTab]);
@@ -298,32 +298,40 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
             {subtitles.map((sub, idx) => {
               const isActive = idx === currentIndex;
               const isPinned = savedSentences.some(s => s.subtitleId === sub.id);
-              const displayText = showTashkeel ? (sub.vocalizedText || sub.text) : sub.text.replace(/[\u064B-\u065F\u0670]/g, '');
+              const displayText = showTashkeel 
+                ? (sub.vocalizedText || sub.text) 
+                : (sub.text || sub.vocalizedText || '').replace(/[\u064B-\u065F\u0670]/g, '');
               const words = displayText.split(/\s+/);
 
               return (
                 <div
                   key={sub.id}
                   ref={isActive ? activeLineRef : null}
-                  className={`p-3 rounded-2xl border transition-all ${
+                  onClick={() => onSeekToSubtitle(sub)}
+                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
                     isActive
                       ? isLight
-                        ? 'bg-rose-50/70 border-rose-300 shadow-md ring-1 ring-rose-400/40'
-                        : 'bg-rose-950/20 border-rose-600/40 shadow-md ring-1 ring-rose-500/30'
+                        ? 'bg-rose-50/80 border-rose-400 shadow-md ring-2 ring-rose-400/40'
+                        : 'bg-rose-950/30 border-rose-500/60 shadow-lg ring-2 ring-rose-500/40'
                       : isLight
-                      ? 'bg-white hover:bg-slate-50/80 border-slate-200'
-                      : 'bg-slate-850 hover:bg-slate-800 border-slate-750'
+                      ? 'bg-white hover:bg-slate-50/90 border-slate-200 hover:border-slate-300 shadow-xs'
+                      : 'bg-slate-850 hover:bg-slate-800 border-slate-750 hover:border-slate-700'
                   }`}
+                  title={`Click to seek video to ${Math.floor(sub.start / 60)}:${(sub.start % 60 < 10 ? '0' : '') + Math.floor(sub.start % 60)}`}
                 >
                   {/* Top Bar: Timestamp & Actions */}
                   <div className="flex items-center justify-between gap-2 text-xs mb-1.5">
                     <span 
-                      onClick={() => onSeekToSubtitle(sub)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSeekToSubtitle(sub);
+                      }}
                       className={`font-mono text-[11px] px-2 py-0.5 rounded cursor-pointer font-bold ${
                         isActive 
                           ? 'bg-rose-600 text-white' 
                           : isLight ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-slate-800 text-slate-400 hover:text-slate-200'
                       }`}
+                      title="Seek video to timestamp"
                     >
                       {Math.floor(sub.start / 60)}:{(sub.start % 60 < 10 ? '0' : '') + Math.floor(sub.start % 60)}
                     </span>
@@ -331,7 +339,10 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                     <div className="flex items-center gap-1">
                       {/* Audio speak */}
                       <button
-                        onClick={() => speakWord(sub.text, 'ar-SA')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          speakWord(sub.text, 'ar-SA');
+                        }}
                         className="p-1 rounded text-slate-400 hover:text-amber-500 transition-colors cursor-pointer"
                         title="Listen to pronunciation"
                       >
@@ -340,7 +351,8 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
 
                       {/* Loop line */}
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (loopConfig.active && loopConfig.startIndex === idx) {
                             onStopLoop();
                           } else {
@@ -359,7 +371,10 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
 
                       {/* Pin to phrasebook */}
                       <button
-                        onClick={() => onPinSentence(sub)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onPinSentence(sub);
+                        }}
                         className={`p-1 rounded transition-colors cursor-pointer ${
                           isPinned ? 'text-amber-500 fill-amber-500' : 'text-slate-400 hover:text-amber-500'
                         }`}
@@ -372,7 +387,7 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
 
                   {/* Arabic Clickable Words */}
                   <div 
-                    className={`font-arabic text-right leading-loose select-text cursor-pointer ${
+                    className={`font-arabic text-right leading-loose select-text ${
                       fontSize === 'xl' ? 'text-2xl' : fontSize === 'lg' ? 'text-xl' : 'text-lg'
                     } ${isLight ? 'text-slate-900' : 'text-slate-100'}`}
                     dir="rtl"
@@ -383,7 +398,14 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                       return (
                         <span
                           key={wIdx}
-                          onClick={() => handleSelectWord(clean)}
+                          onClick={(e) => {
+                            // Reverse navigation: click seeks the video to this subtitle!
+                            onSeekToSubtitle(sub);
+                            if (clean) {
+                              setSelectedWord(clean);
+                              handleDiscoverWord(clean);
+                            }
+                          }}
                           className={`inline-block mx-0.5 px-1 py-0.5 rounded transition-all cursor-pointer ${
                             isWordActive
                               ? 'bg-indigo-600 text-white font-bold shadow-xs'
@@ -391,7 +413,7 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                               ? 'hover:bg-indigo-50 hover:text-indigo-600'
                               : 'hover:bg-indigo-950/60 hover:text-indigo-300'
                           }`}
-                          title={`Inspect root & anatomy: "${clean}"`}
+                          title={`Click to seek to this subtitle & analyze: "${clean}"`}
                         >
                           {w}
                         </span>
@@ -597,7 +619,7 @@ export const ArabicLinguisticPanel: React.FC<ArabicLinguisticPanelProps> = ({
                       <span>Linguistic Nuances & SLA Insights</span>
                     </div>
                     <button
-                      onClick={handleDiscoverWord}
+                      onClick={() => handleDiscoverWord()}
                       disabled={isDiscovering}
                       className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
                     >

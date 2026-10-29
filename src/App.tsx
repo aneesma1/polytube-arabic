@@ -109,7 +109,7 @@ export default function App() {
   // Subtitles: Base Curated Arabic Subtitles
   const baseCuratedSubtitles = useMemo(() => {
     const all = getAllCuratedVideos();
-    const matched = all.find(cv => cv.youtubeId === currentVideoId) || CURATED_VIDEOS.find(cv => cv.youtubeId === currentVideoId);
+    const matched = CURATED_VIDEOS.find(cv => cv.youtubeId === currentVideoId || cv.id === currentVideoId) || all.find(cv => cv.youtubeId === currentVideoId);
     return matched ? matched.subtitles : [];
   }, [currentVideoId]);
 
