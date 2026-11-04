@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "PolyTube Caption Bridge",
+  "version": "0.3.0",
+  "description": "Fetches YouTube captions (with timings and translations) and hands them to the PolyTube language player.",
+  "minimum_chrome_version": "111",
+  "permissions": ["scripting"],
+  "host_permissions": ["https://www.youtube.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://aneesma1.github.io/polytube-arabic/*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ],
+      "js": ["bridge.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

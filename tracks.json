@@ -1,0 +1,35 @@
+[
+  {
+    "baseUrl": "https://www.youtube.com/api/timedtext?v=9thMVV4yM3Y&ei=RIbbaob-HvK56dsPn_GcEA&caps=asr&opi=112496729&exp=xpe&xoaf=5&xowf=1&hl=ar&ip=0.0.0.0&ipbits=0&expire=1792796852&sparams=ip,ipbits,expire,v,ei,caps,opi,exp,xoaf&signature=CF04F2AEE831682A8090A92017E3C8B9DFBB2E01.59ED96CA4A20C6520E023E8332B5CD1BCDCCEC44&key=yt8&lang=en",
+    "name": {
+      "simpleText": "الإنجليزية"
+    },
+    "vssId": ".en",
+    "languageCode": "en",
+    "isTranslatable": true,
+    "trackName": ""
+  },
+  {
+    "baseUrl": "https://www.youtube.com/api/timedtext?v=9thMVV4yM3Y&ei=RIbbaob-HvK56dsPn_GcEA&caps=asr&opi=112496729&exp=xpe&xoaf=5&xowf=1&hl=ar&ip=0.0.0.0&ipbits=0&expire=1792796852&sparams=ip,ipbits,expire,v,ei,caps,opi,exp,xoaf&signature=CF04F2AEE831682A8090A92017E3C8B9DFBB2E01.59ED96CA4A20C6520E023E8332B5CD1BCDCCEC44&key=yt8&lang=ar",
+    "name": {
+      "simpleText": "العربية"
+    },
+    "vssId": ".ar",
+    "languageCode": "ar",
+    "rtl": true,
+    "isTranslatable": true,
+    "trackName": ""
+  },
+  {
+    "baseUrl": "https://www.youtube.com/api/timedtext?v=9thMVV4yM3Y&ei=RIbbaob-HvK56dsPn_GcEA&caps=asr&opi=112496729&exp=xpe&xoaf=5&xowf=1&hl=ar&ip=0.0.0.0&ipbits=0&expire=1792796852&sparams=ip,ipbits,expire,v,ei,caps,opi,exp,xoaf&signature=CF04F2AEE831682A8090A92017E3C8B9DFBB2E01.59ED96CA4A20C6520E023E8332B5CD1BCDCCEC44&key=yt8&kind=asr&lang=ar",
+    "name": {
+      "simpleText": "العربية (تم إنشاؤها تلقائيًا)"
+    },
+    "vssId": "a.ar",
+    "languageCode": "ar",
+    "kind": "asr",
+    "rtl": true,
+    "isTranslatable": true,
+    "trackName": ""
+  }
+]
