@@ -1,0 +1,21 @@
+{
+  "short_name": "PolyTube Arabic",
+  "name": "PolyTube Arabic - Dual Subtitle Linguistic Immersion",
+  "description": "Distraction-free Arabic YouTube immersion with interactive dual subtitles, root & grammar discovery, and study export.",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./",
+  "background_color": "#090d16",
+  "theme_color": "#e11d48",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["education", "productivity", "utilities"]
+}
